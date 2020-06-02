@@ -33,10 +33,6 @@ public class SplendorAngularConnectionApplication {
 
         @Override
         public void configure(AuthenticationManagerBuilder auth) throws Exception {
-//            auth.inMemoryAuthentication()
-//                    .withUser("user1").password("{noop}user123").roles("USER")
-//                    .and()
-//                    .withUser("admin1").password("{noop}admin123").roles("ADMIN");
             auth
                     .userDetailsService(customUserDetailsService)
                     .passwordEncoder(bCryptPasswordEncoder);

@@ -1,12 +1,16 @@
 package pl.coderslab.splendor_angular_connection.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import pl.coderslab.splendor_angular_connection.auth.Role;
+import pl.coderslab.splendor_angular_connection.game.GameState;
 
 import javax.persistence.*;
+import javax.transaction.Transactional;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -30,4 +34,8 @@ public class User {
     @JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"),
                     inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles;
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<Long> currentlyInteractingUsers;
+    @ManyToOne(fetch = FetchType.EAGER)
+    private GameState gameState;
 }

@@ -13,11 +13,11 @@ public interface UserService {
 
     void startChallenge(Map<String,Object> invitation, CurrentUser currentUser);
 
-    boolean changeState(String username, String newState, String stateAllowedForChange);
     void changeState(CurrentUser customUser, String newState);
-    void changeState(User user, String newState);
 
     void resignFromGame(HashMap<String, Object> data, CurrentUser currentUser);
 
     void joinGame(HashMap<String, Object> data, CurrentUser currentUser);
+
+    void checkInvites(User user);
 }

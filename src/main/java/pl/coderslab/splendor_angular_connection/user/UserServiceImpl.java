@@ -1,15 +1,16 @@
 package pl.coderslab.splendor_angular_connection.user;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hibernate.Hibernate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.coderslab.splendor_angular_connection.auth.CurrentUser;
 import pl.coderslab.splendor_angular_connection.auth.Role;
 import pl.coderslab.splendor_angular_connection.auth.RoleRepository;
-import pl.coderslab.splendor_angular_connection.utils.Utils;
+import pl.coderslab.splendor_angular_connection.game.GameService;
+import pl.coderslab.splendor_angular_connection.game.GameState;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -17,14 +18,14 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
-    private final Utils utils;
+    private final GameService gameService;
 
     public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
-                           BCryptPasswordEncoder passwordEncoder, Utils utils) {
+                           BCryptPasswordEncoder passwordEncoder, GameService gameService) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.utils = utils;
+        this.gameService = gameService;
     }
 
     @Override
@@ -44,48 +45,27 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void startChallenge(Map<String, Object> invitation, CurrentUser currentUser) {
-        ObjectMapper mapper = new ObjectMapper();
-        HashMap<String, String> newStateMap = new HashMap<>();
-        newStateMap.put("state","challenged");
-        newStateMap.put("challenger", currentUser.getUsername());
-        String newState = utils.stringify(newStateMap);
-        HashMap<String, String> playerBoard = new HashMap<>();
+        List<Long> playerBoard = new ArrayList<>();
         HashMap<String, String> properInvitation = (HashMap<String, String>) invitation.get("invitation");
         Set<String> keySet = properInvitation.keySet();
         for (String key : keySet) {
-            String player = properInvitation.get(key);
-            if (player.length() > 0) {
-                boolean isPlayerChallenged = changeState(player, newState, "idle");
-                if (isPlayerChallenged) {
-                    playerBoard.put(player, "false");
+            Optional<User> player = userRepository.findByUsername(properInvitation.get(key));
+            player.map(user -> {
+                if ("idle".equals(user.getUserState())){
+                    user.setUserState("challenged");
+                    ArrayList<Long> users = new ArrayList<>();
+                    users.add(currentUser.getUser().getId());
+                    user.setCurrentlyInteractingUsers(users);
+                    userRepository.save(user);
+                    playerBoard.add(user.getId());
                 }
-            }
+                return null;
+            });
         }
-        changeState(currentUser, utils.stringify(playerBoard));
+        currentUser.getUser().setCurrentlyInteractingUsers(playerBoard);
+        changeState(currentUser, "host");
     }
 
-
-    @Override
-    public boolean changeState(String username, String newState, String stateAllowedForChange) {
-        Optional<User> user = userRepository.findByUsername(username);
-        Optional<Boolean> booleanOptional = user.map(user1 -> {
-            if (utils.jsonify(user1.getUserState())
-                    .get("state")
-                    .equals(stateAllowedForChange)) {
-                user1.setUserState(newState);
-                userRepository.save(user1);
-                return true;
-            } else {
-                return false;
-            }
-        });
-        if (booleanOptional.isEmpty() || booleanOptional.get() == false) {
-            return false;
-        } else {
-            return true;
-        }
-
-    }
 
     @Override
     public void changeState(CurrentUser customUser, String newState) {
@@ -95,34 +75,39 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void changeState(User user, String newState) {
-        user.setUserState(newState);
-        userRepository.save(user);
-    }
-
-    @Override
     public void resignFromGame(HashMap<String, Object> data, CurrentUser currentUser) {
-        String challenger = (String) data.get("challenger");
-        User user = findByUserName(challenger);
-        Map<String, String> userState = utils.jsonify(user.getUserState());
-        userState.remove(currentUser.getUsername());
-        changeState(user,utils.stringify(userState));
-        HashMap<String, String> newStateMap = new HashMap<>();
-        newStateMap.put("state","idle");
-        //racing niestety może być
-        changeState(currentUser,utils.stringify(newStateMap));
-
+        User user1 = currentUser.getUser();
+        user1.setCurrentlyInteractingUsers(null);
+        user1.setUserState("idle");
+        userRepository.save(user1);
     }
 
     @Override
     public void joinGame(HashMap<String, Object> data, CurrentUser currentUser) {
-        String challenger = (String) data.get("challenger");
-        User user = findByUserName(challenger);
-        Map<String, String> userState = utils.jsonify(user.getUserState());
-        userState.put(currentUser.getUsername(), "true");
-        //racing niestety może być
-        changeState(user,utils.stringify(userState));
+        User user1 = currentUser.getUser();
+//        user1.setCurrentlyInteractingUsers(null);
+        user1.setUserState("waiting");
+        userRepository.save(user1);
     }
 
-
+    @Override
+    public void checkInvites(User user) {
+        List<Long> userList = user.getCurrentlyInteractingUsers();
+        List<User> challenged = userList.stream()
+                .map(aLong -> userRepository.findById(aLong).get())
+                .filter(user1 -> user1.getUserState().equals("challenged") || user1.getUserState().equals("waiting"))
+                .collect(Collectors.toList());
+        user.setCurrentlyInteractingUsers(challenged.stream().map(User::getId).collect(Collectors.toList()));
+        if (challenged.stream().allMatch(user1 -> user1.getUserState().equals("waiting"))){
+            challenged.add(user);
+            GameState gameState = gameService.startGame(challenged);
+            challenged.stream().forEach(user1 -> {
+                user1.setUserState("playing");
+                user1.setCurrentlyInteractingUsers(null);
+                user1.setGameState(gameState);
+                userRepository.save(user1);
+                    }
+            );
+        }
+    }
 }

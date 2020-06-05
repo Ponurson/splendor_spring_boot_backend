@@ -36,6 +36,6 @@ public class User {
     private Set<Role> roles;
     @ElementCollection(fetch = FetchType.EAGER)
     private List<Long> currentlyInteractingUsers;
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne
     private GameState gameState;
 }

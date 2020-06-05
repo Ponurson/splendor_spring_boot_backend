@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.transaction.Transactional;
 import java.util.List;
 
 @Data
@@ -23,6 +24,9 @@ public class GameState {
     private List<Player> players;
     @ManyToMany(cascade = CascadeType.ALL)
     private List<Card> cards;
+    @ManyToMany(cascade = CascadeType.ALL)
+    private List<Card> cardsOnTable;
+    private String lastPlayerName;
     private Integer diamonds;
     private Integer emeralds;
     private Integer rubys;

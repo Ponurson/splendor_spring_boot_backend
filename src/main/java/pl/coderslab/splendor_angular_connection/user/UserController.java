@@ -11,7 +11,6 @@ import java.util.Map;
 
 @CrossOrigin
 @RestController
-@SessionAttributes({"players"})
 public class UserController {
 
     private final UserService userService;

@@ -11,5 +11,8 @@ import java.util.List;
 @AllArgsConstructor
 @Component
 public class GameStateWrapper {
-    private List<String> cardsOnTable;
+    private List<Card> cardsOnTable;
+    private List<String> players;
+    private List<Integer> tokens;
+    private Boolean isItMyTurn;
 }

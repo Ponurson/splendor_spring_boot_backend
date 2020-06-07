@@ -1,6 +1,6 @@
 package pl.coderslab.splendor_angular_connection.user;
 
-import org.hibernate.Hibernate;
+import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import pl.coderslab.splendor_angular_connection.auth.CurrentUser;
@@ -13,20 +13,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final GameService gameService;
-
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
-                           BCryptPasswordEncoder passwordEncoder, GameService gameService) {
-        this.passwordEncoder = passwordEncoder;
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.gameService = gameService;
-    }
 
     @Override
     public User findByUserName(String username) {

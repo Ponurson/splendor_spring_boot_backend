@@ -1,5 +1,6 @@
 package pl.coderslab.splendor_angular_connection.user;
 
+import lombok.AllArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pl.coderslab.splendor_angular_connection.auth.CurrentUser;
@@ -11,15 +12,11 @@ import java.util.Map;
 
 @CrossOrigin
 @RestController
+@AllArgsConstructor
 public class UserController {
 
     private final UserService userService;
     private final UserRepository userRepository;
-
-    public UserController(UserService userService, UserRepository userRepository) {
-        this.userService = userService;
-        this.userRepository = userRepository;
-    }
 
     @PostMapping("/register")
     public LoginResponse createUser(@RequestBody User user) {

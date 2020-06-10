@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import pl.coderslab.splendor_angular_connection.user.User;
 
 import javax.persistence.*;
@@ -36,9 +38,17 @@ public class Player {
     private Integer saphires;
     private Integer onyxs;
 
+    @ElementCollection
+    @MapKeyColumn(name = "token_type")
+    @MapKeyEnumerated(EnumType.STRING)
+    @LazyCollection(LazyCollectionOption.FALSE)
+    private Map<TokenType, Integer> playerTokens;
+
     public Player(User user) {
         this.user = user;
         this.cards = new ArrayList<>();
+        this.playerTokens = new HashMap<TokenType, Integer>();
+        Arrays.stream(TokenType.values()).forEach(tokenType -> playerTokens.put(tokenType,0));
         this.diamonds = 0;
         this.emeralds = 0;
         this.rubys = 0;
@@ -47,11 +57,16 @@ public class Player {
         this.points = 0;
     }
 
-    public Map<String, Integer> getMapOfCards() {
-        Map<String, Integer> mapOfCardProducts = cards.stream()
-                .map(card -> card.getProduces())
-                .collect(groupingBy(Function.identity(), summingInt(e -> 1)));
-        return mapOfCardProducts;
+    public Map<TokenType, Integer> getMapOfCards() {
+        HashMap<TokenType, Integer> cardProductMap = new HashMap<>();
+        Arrays.stream(TokenType.values()).forEach(tokenType -> cardProductMap.put(tokenType,0));
+        cards.stream()
+                .map(Card::getProduces)
+                .forEach(tokenType -> cardProductMap.put(tokenType,cardProductMap.get(tokenType)+1));
+        return cardProductMap;
+//        return cards.stream()
+//                .map(Card::getProduces)
+//                .collect(groupingBy(Function.identity(), summingInt(e -> 1)));
     }
 
     ;
@@ -73,34 +88,41 @@ public class Player {
                 ", user=" + user.getUsername() +
                 ", points=" + points +
                 ", cards=" + getMapOfCards() +
-                ", diamonds=" + diamonds +
-                ", emeralds=" + emeralds +
-                ", rubys=" + rubys +
-                ", saphires=" + saphires +
-                ", onyxs=" + onyxs +
+                ", diamonds=" + getPlayerTokens().get(TokenType.DIAMOND) +
+                ", emeralds=" + getPlayerTokens().get(TokenType.EMERALD) +
+                ", rubys=" + getPlayerTokens().get(TokenType.RUBY) +
+                ", sapphires=" + getPlayerTokens().get(TokenType.SAPPHIRE) +
+                ", onyxs=" + getPlayerTokens().get(TokenType.ONYX) +
                 '}';
     }
 
-    public Map<String, Integer> addCard(Card card) {
-        HashMap<String, Integer> payment = new HashMap<>();
+    public Map<TokenType, Integer> addCard(Card card) {
+        HashMap<TokenType, Integer> payment = new HashMap<>();
+        Map<TokenType, Integer> cardProducts = getMapOfCards();
         cards.add(card);
         points += card.getPoints();
-        Map<String, Integer> cardProducts = getMapOfCards();
-        payment.put("diamonds",
-                Math.max(card.getDiamondCost() - (cardProducts.get("diamond") != null ? cardProducts.get("diamond") : 0), 0));
-        diamonds -= payment.get("diamonds");
-        payment.put("emeralds",
-                Math.max(card.getEmeraldCost() - (cardProducts.get("emerald") != null ? cardProducts.get("emerald") : 0), 0));
-        emeralds -= payment.get("emeralds");
-        payment.put("rubys",
-                Math.max(card.getRubyCost() - (cardProducts.get("ruby") != null ? cardProducts.get("ruby") : 0), 0));
-        rubys -= payment.get("rubys");
-        payment.put("saphires",
-                Math.max(card.getSaphireCost() - (cardProducts.get("saphire") != null ? cardProducts.get("saphire") : 0), 0));
-        saphires -= payment.get("saphires");
-        payment.put("onyxs",
-                Math.max(card.getOnyxCost() - (cardProducts.get("onyx") != null ? cardProducts.get("onyx") : 0), 0));
-        onyxs -= payment.get("onyxs");
+        card.getCost().forEach((tokenType, integer) -> {
+            payment.put(tokenType,
+                    Math.max(integer - (cardProducts.get(tokenType) != null ? cardProducts.get(tokenType) : 0), 0)
+                    );
+            playerTokens.put(tokenType,playerTokens.get(tokenType) - payment.get(tokenType));
+        });
+//
+//        payment.put("diamonds",
+//                Math.max(card.getDiamondCost() - (cardProducts.get("diamond") != null ? cardProducts.get("diamond") : 0), 0));
+//        diamonds -= payment.get("diamonds");
+//        payment.put("emeralds",
+//                Math.max(card.getEmeraldCost() - (cardProducts.get("emerald") != null ? cardProducts.get("emerald") : 0), 0));
+//        emeralds -= payment.get("emeralds");
+//        payment.put("rubys",
+//                Math.max(card.getRubyCost() - (cardProducts.get("ruby") != null ? cardProducts.get("ruby") : 0), 0));
+//        rubys -= payment.get("rubys");
+//        payment.put("saphires",
+//                Math.max(card.getSaphireCost() - (cardProducts.get("saphire") != null ? cardProducts.get("saphire") : 0), 0));
+//        saphires -= payment.get("saphires");
+//        payment.put("onyxs",
+//                Math.max(card.getOnyxCost() - (cardProducts.get("onyx") != null ? cardProducts.get("onyx") : 0), 0));
+//        onyxs -= payment.get("onyxs");
         return payment;
     }
 }

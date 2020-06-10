@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -13,6 +15,8 @@ import java.util.List;
 public class GameStateWrapper {
     private List<Card> cardsOnTable;
     private List<String> players;
-    private List<Integer> tokens;
+//    private List<Integer> tokens;
+    private Map<TokenType,Integer> tokens;
     private Boolean isItMyTurn;
 }
+

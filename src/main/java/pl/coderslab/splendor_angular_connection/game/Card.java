@@ -4,8 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.tomcat.jni.Address;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 
 import javax.persistence.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 @Data
@@ -20,8 +25,16 @@ public class Card {
     @Column(name = "card_id")
     private Long id;
     private Integer points;
-    private String produces;
+    @Enumerated
+    private TokenType produces;
     private Integer level;
+
+    @ElementCollection
+    @MapKeyColumn(name = "token_type")
+    @MapKeyEnumerated(EnumType.STRING)
+    @LazyCollection(LazyCollectionOption.FALSE)
+    private Map<TokenType, Integer> cost;
+
     private Integer diamondCost;
     private Integer emeraldCost;
     private Integer rubyCost;

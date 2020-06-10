@@ -8,6 +8,7 @@ import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 
 import javax.persistence.*;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,17 +35,28 @@ public class GameState {
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Card> cardsOnTable;
     private String lastPlayerName;
+
+    @ElementCollection
+    @MapKeyColumn(name = "token_type")
+    @MapKeyEnumerated(EnumType.STRING)
+    @LazyCollection(LazyCollectionOption.FALSE)
+    private Map<TokenType, Integer> tokensOnTable;
+
     private Integer diamonds;
     private Integer emeralds;
     private Integer rubys;
     private Integer saphires;
     private Integer onyxs;
 
-    public void addPayment(Map<String, Integer> payment) {
-        diamonds += payment.get("diamonds");
-        emeralds += payment.get("emeralds");
-        rubys += payment.get("rubys");
-        saphires += payment.get("saphires");
-        onyxs += payment.get("onyxs");
+    public void addPayment(Map<TokenType, Integer> payment){
+       payment.forEach((tokenType, integer) -> tokensOnTable.put(tokenType, tokensOnTable.get(tokenType)+integer));
     }
+
+//    public void addPayment(Map<String, Integer> payment) {
+//        diamonds += payment.get("diamonds");
+//        emeralds += payment.get("emeralds");
+//        rubys += payment.get("rubys");
+//        saphires += payment.get("saphires");
+//        onyxs += payment.get("onyxs");
+//    }
 }

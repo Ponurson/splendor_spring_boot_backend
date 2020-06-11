@@ -49,12 +49,6 @@ public class GameServiceImpl implements GameService {
         HashMap<TokenType, Integer> tokensOnTable = new HashMap<>();
         Arrays.stream(TokenType.values()).forEach(tokenType -> tokensOnTable.put(tokenType, startTokens));
         gameState.setTokensOnTable(tokensOnTable);
-
-        gameState.setDiamonds(startTokens);
-        gameState.setEmeralds(startTokens);
-        gameState.setRubys(startTokens);
-        gameState.setSaphires(startTokens);
-        gameState.setOnyxs(startTokens);
         gameState.setLastPlayerName("init");
         gameState = gameStateRepository.save(gameState);
         return gameState;
@@ -68,27 +62,12 @@ public class GameServiceImpl implements GameService {
         Arrays.stream(TokenType.values()).forEach(tokenType ->
                 localTokenMap.put(tokenType, tokensMap.get(tokenType) + tokensFromCards.get(tokenType))
         );
-//        tokensFromCards.forEach((tokenType, integer) -> tokensMap.put(tokenType, tokensMap.get(tokenType) + integer));
-//        Set<String> keySet = tokensMap.keySet();
-//        for (String key :
-//                keySet) {
-//            if (tokensFromCards.get(key) != null) {
-//                tokensMap.put(key, tokensMap.get(key) + tokensFromCards.get(key));
-//            }
-//        }
         gameState.setCardsOnTable(gameState.getCardsOnTable().stream()
                 .map(card -> {
                     if (card.getCost().keySet().stream()
                             .allMatch(tokenType -> card.getCost().get(tokenType) <= (localTokenMap.get(tokenType) == null ? 0 : localTokenMap.get(tokenType)))) {
                         card.setClickable(true);
                     }
-//                    if (card.getDiamondCost() <= tokensMap.get("diamond") &&
-//                            card.getEmeraldCost() <= tokensMap.get("emerald") &&
-//                            card.getRubyCost() <= tokensMap.get("ruby") &&
-//                            card.getSaphireCost() <= tokensMap.get("saphire") &&
-//                            card.getOnyxCost() <= tokensMap.get("onyx")) {
-//                        card.setClickable(true);
-//                    }
                     return card;
                 })
                 .collect(Collectors.toList()));
@@ -117,14 +96,6 @@ public class GameServiceImpl implements GameService {
                 .map(Player::toString)
                 .collect(Collectors.toList())
         );
-        //to jest bardzo jednak nieeleganckie że tokeny są tak przetrzymywane
-//        ArrayList<Integer> tokens = new ArrayList<>();
-//
-//        tokens.add(gameState.getDiamonds());
-//        tokens.add(gameState.getEmeralds());
-//        tokens.add(gameState.getRubys());
-//        tokens.add(gameState.getSaphires());
-//        tokens.add(gameState.getOnyxs());
         gameStateWrapper.setTokens(gameState.getTokensOnTable());
         gameStateWrapper.setIsItMyTurn(isItMyTurn);
         return gameStateWrapper;
@@ -145,30 +116,7 @@ public class GameServiceImpl implements GameService {
     @Override
     public boolean checkTokenWithGetter(String token, GameState gameState, int i) {
         return gameState.getTokensOnTable().get(TokenType.valueOf(token)) > i;
-
-//        return (("d".equals(token) && gameState.getDiamonds() > i) ||
-//                ("e".equals(token) && gameState.getEmeralds() > i) ||
-//                ("r".equals(token) && gameState.getRubys() > i) ||
-//                ("s".equals(token) && gameState.getSaphires() > i) ||
-//                ("o".equals(token) && gameState.getOnyxs() > i));
     }
-
-    public void convertTokens() {
-        List<Card> cardList = cardRepository.findAll();
-        cardList.stream()
-                .peek(card -> {
-                    HashMap<TokenType, Integer> costMap = new HashMap<>();
-                    costMap.put(TokenType.DIAMOND, card.getDiamondCost());
-                    costMap.put(TokenType.EMERALD, card.getEmeraldCost());
-                    costMap.put(TokenType.RUBY, card.getRubyCost());
-                    costMap.put(TokenType.SAPPHIRE, card.getSaphireCost());
-                    costMap.put(TokenType.ONYX, card.getOnyxCost());
-                    card.setCost(costMap);
-                })
-                .forEach(cardRepository::save);
-    }
-
-    ;
 
     @Override
     public boolean checkTokenGain(Map<String, Object> token, CurrentUser currentUser) {
@@ -193,22 +141,6 @@ public class GameServiceImpl implements GameService {
         Map<TokenType, Integer> tokensOnTable = gameState.getTokensOnTable();
         tokensOnTable.put(tokenType, (tokensOnTable.get(tokenType) == null ? 0 : tokensOnTable.get(tokenType)) - 2);
         gameState.setTokensOnTable(tokensOnTable);
-        //        if ("d".equals(token)) {
-//            gameState.setDiamonds(gameState.getDiamonds() - 2);
-//            player.setDiamonds(player.getDiamonds() + 2);
-//        } else if ("e".equals(token)) {
-//            gameState.setEmeralds(gameState.getEmeralds() - 2);
-//            player.setEmeralds(player.getEmeralds() + 2);
-//        } else if ("r".equals(token)) {
-//            gameState.setRubys(gameState.getRubys() - 2);
-//            player.setRubys(player.getRubys() + 2);
-//        } else if ("s".equals(token)) {
-//            gameState.setSaphires(gameState.getSaphires() - 2);
-//            player.setSaphires(player.getSaphires() + 2);
-//        } else if ("o".equals(token)) {
-//            gameState.setOnyxs(gameState.getOnyxs() - 2);
-//            player.setOnyxs(player.getOnyxs() + 2);
-//        }
         gameState.setLastPlayerName(currentUser.getUsername());
         playerRepository.save(player);
         gameStateRepository.save(gameState);
@@ -227,23 +159,6 @@ public class GameServiceImpl implements GameService {
                     TokenType tokenType = TokenType.valueOf(s);
                     playerTokens.put(tokenType, (playerTokens.get(tokenType) == null ? 0 : playerTokens.get(tokenType)) + 1);
                     tokensOnTable.put(tokenType, (tokensOnTable.get(tokenType) == null ? 0 : tokensOnTable.get(tokenType)) - 1);
-
-                    //                    if ("d".equals(s)) {
-//                        gameState.setDiamonds(gameState.getDiamonds() - 1);
-//                        player.setDiamonds(player.getDiamonds() + 1);
-//                    } else if ("e".equals(s)) {
-//                        gameState.setEmeralds(gameState.getEmeralds() - 1);
-//                        player.setEmeralds(player.getEmeralds() + 1);
-//                    } else if ("r".equals(s)) {
-//                        gameState.setRubys(gameState.getRubys() - 1);
-//                        player.setRubys(player.getRubys() + 1);
-//                    } else if ("s".equals(s)) {
-//                        gameState.setSaphires(gameState.getSaphires() - 1);
-//                        player.setSaphires(player.getSaphires() + 1);
-//                    } else if ("o".equals(s)) {
-//                        gameState.setOnyxs(gameState.getOnyxs() - 1);
-//                        player.setOnyxs(player.getOnyxs() + 1);
-//                    }
                 });
         player.setPlayerTokens(playerTokens);
         gameState.setTokensOnTable(tokensOnTable);

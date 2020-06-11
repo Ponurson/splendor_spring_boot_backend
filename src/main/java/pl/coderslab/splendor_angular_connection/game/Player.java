@@ -32,11 +32,6 @@ public class Player {
     private Integer points;
     @ManyToMany
     private List<Card> cards;
-    private Integer diamonds;
-    private Integer emeralds;
-    private Integer rubys;
-    private Integer saphires;
-    private Integer onyxs;
 
     @ElementCollection
     @MapKeyColumn(name = "token_type")
@@ -49,11 +44,6 @@ public class Player {
         this.cards = new ArrayList<>();
         this.playerTokens = new HashMap<TokenType, Integer>();
         Arrays.stream(TokenType.values()).forEach(tokenType -> playerTokens.put(tokenType,0));
-        this.diamonds = 0;
-        this.emeralds = 0;
-        this.rubys = 0;
-        this.saphires = 0;
-        this.onyxs = 0;
         this.points = 0;
     }
 
@@ -64,22 +54,8 @@ public class Player {
                 .map(Card::getProduces)
                 .forEach(tokenType -> cardProductMap.put(tokenType,cardProductMap.get(tokenType)+1));
         return cardProductMap;
-//        return cards.stream()
-//                .map(Card::getProduces)
-//                .collect(groupingBy(Function.identity(), summingInt(e -> 1)));
     }
 
-    ;
-
-    public Map<String, Integer> getTokensMap() {
-        HashMap<String, Integer> tokenMap = new HashMap<>();
-        tokenMap.put("diamond", diamonds);
-        tokenMap.put("emerald", emeralds);
-        tokenMap.put("ruby", rubys);
-        tokenMap.put("saphire", saphires);
-        tokenMap.put("onyx", onyxs);
-        return tokenMap;
-    }
 
     @Override
     public String toString() {
@@ -107,22 +83,6 @@ public class Player {
                     );
             playerTokens.put(tokenType,playerTokens.get(tokenType) - payment.get(tokenType));
         });
-//
-//        payment.put("diamonds",
-//                Math.max(card.getDiamondCost() - (cardProducts.get("diamond") != null ? cardProducts.get("diamond") : 0), 0));
-//        diamonds -= payment.get("diamonds");
-//        payment.put("emeralds",
-//                Math.max(card.getEmeraldCost() - (cardProducts.get("emerald") != null ? cardProducts.get("emerald") : 0), 0));
-//        emeralds -= payment.get("emeralds");
-//        payment.put("rubys",
-//                Math.max(card.getRubyCost() - (cardProducts.get("ruby") != null ? cardProducts.get("ruby") : 0), 0));
-//        rubys -= payment.get("rubys");
-//        payment.put("saphires",
-//                Math.max(card.getSaphireCost() - (cardProducts.get("saphire") != null ? cardProducts.get("saphire") : 0), 0));
-//        saphires -= payment.get("saphires");
-//        payment.put("onyxs",
-//                Math.max(card.getOnyxCost() - (cardProducts.get("onyx") != null ? cardProducts.get("onyx") : 0), 0));
-//        onyxs -= payment.get("onyxs");
         return payment;
     }
 }

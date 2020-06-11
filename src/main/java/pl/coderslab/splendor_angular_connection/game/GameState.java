@@ -23,8 +23,6 @@ public class GameState {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "game_id")
     private Long id;
-    //    @OneToMany
-//    private List<Player> players;
     @ElementCollection
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Long> players;
@@ -42,21 +40,8 @@ public class GameState {
     @LazyCollection(LazyCollectionOption.FALSE)
     private Map<TokenType, Integer> tokensOnTable;
 
-    private Integer diamonds;
-    private Integer emeralds;
-    private Integer rubys;
-    private Integer saphires;
-    private Integer onyxs;
-
     public void addPayment(Map<TokenType, Integer> payment){
        payment.forEach((tokenType, integer) -> tokensOnTable.put(tokenType, tokensOnTable.get(tokenType)+integer));
     }
 
-//    public void addPayment(Map<String, Integer> payment) {
-//        diamonds += payment.get("diamonds");
-//        emeralds += payment.get("emeralds");
-//        rubys += payment.get("rubys");
-//        saphires += payment.get("saphires");
-//        onyxs += payment.get("onyxs");
-//    }
 }

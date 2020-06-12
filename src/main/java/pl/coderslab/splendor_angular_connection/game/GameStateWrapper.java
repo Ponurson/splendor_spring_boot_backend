@@ -14,7 +14,8 @@ import java.util.Map;
 @Component
 public class GameStateWrapper {
     private List<Card> cardsOnTable;
-    private List<String> players;
+//    private List<String> players;
+    private List<PlayerWrapper> players;
 //    private List<Integer> tokens;
     private Map<TokenType,Integer> tokens;
     private Boolean isItMyTurn;

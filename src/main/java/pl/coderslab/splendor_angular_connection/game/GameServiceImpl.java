@@ -7,7 +7,6 @@ import pl.coderslab.splendor_angular_connection.auth.CurrentUser;
 import pl.coderslab.splendor_angular_connection.user.User;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -94,7 +93,7 @@ public class GameServiceImpl implements GameService {
                 .getPlayers()
                 .stream()
                 .map(aLong -> playerRepository.findById(aLong).get())
-                .map(Player::toString)
+                .map(player -> new PlayerWrapper(player))
                 .collect(Collectors.toList())
         );
         gameStateWrapper.setTokens(gameState.getTokensOnTable());
@@ -131,7 +130,7 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public void addTokens(String token, CurrentUser currentUser) {
+    public String addTokens(String token, CurrentUser currentUser) {
         GameState gameState = currentUser.getUser().getGameState();
         TokenType tokenType = TokenType.valueOf(token);
         //W związku z tym trzeba pamiętać o kasowaniu playerów
@@ -142,13 +141,22 @@ public class GameServiceImpl implements GameService {
         Map<TokenType, Integer> tokensOnTable = gameState.getTokensOnTable();
         tokensOnTable.put(tokenType, (tokensOnTable.get(tokenType) == null ? 0 : tokensOnTable.get(tokenType)) - 2);
         gameState.setTokensOnTable(tokensOnTable);
-        gameState.setLastPlayerName(currentUser.getUsername());
-        playerRepository.save(player);
-        gameStateRepository.save(gameState);
+        int i = howManyTokensNeedToBeGivenBack(player);
+        if (i == 0) {
+            gameState.setLastPlayerName(currentUser.getUsername());
+            playerRepository.save(player);
+            gameStateRepository.save(gameState);
+            return "Operation Confirmed";
+        } else {
+            playerRepository.save(player);
+            gameStateRepository.save(gameState);
+            return "Give back tokens";
+        }
+
     }
 
     @Override
-    public void addTokens(Map<String, Object> token, CurrentUser currentUser) {
+    public String addTokens(Map<String, Object> token, CurrentUser currentUser) {
         GameState gameState = currentUser.getUser().getGameState();
         //W związku z tym trzeba pamiętać o kasowaniu playerów
         Player player = playerRepository.findFirstByUser(currentUser.getUser()).get();
@@ -163,9 +171,17 @@ public class GameServiceImpl implements GameService {
                 });
         player.setPlayerTokens(playerTokens);
         gameState.setTokensOnTable(tokensOnTable);
-        gameState.setLastPlayerName(currentUser.getUsername());
-        playerRepository.save(player);
-        gameStateRepository.save(gameState);
+        int i = howManyTokensNeedToBeGivenBack(player);
+        if (i == 0) {
+            gameState.setLastPlayerName(currentUser.getUsername());
+            playerRepository.save(player);
+            gameStateRepository.save(gameState);
+            return "Operation Confirmed";
+        } else {
+            playerRepository.save(player);
+            gameStateRepository.save(gameState);
+            return "Give back tokens";
+        }
     }
 
     @Override
@@ -222,6 +238,14 @@ public class GameServiceImpl implements GameService {
                 .collect(Collectors.toList())
                 .size();
         return set.size() == (5 - numberOfEmptyTokens);
+    }
+
+    @Override
+    public int howManyTokensNeedToBeGivenBack(Player player) {
+        Integer totalTokens = Arrays.stream(TokenType.values())
+                .map(tokenType -> player.getPlayerTokens().get(tokenType))
+                .reduce(0, Integer::sum);
+        return Math.max(0, totalTokens - 10);
     }
 
     private String getNextPlayer(GameState gameState) {

@@ -34,8 +34,8 @@ public class GameController {
     public LoginResponse gainTwoTokens(@AuthenticationPrincipal CurrentUser currentUser,
                                        @RequestBody String token) {
         if (gameService.checkTokenGain(token, currentUser)) {
-            gameService.addTokens(token, currentUser);
-            return new LoginResponse("gained two tokens");
+            String tokens = gameService.addTokens(token, currentUser);
+            return new LoginResponse(tokens);
         }
         return new LoginResponse("bad request");
     }
@@ -44,8 +44,8 @@ public class GameController {
     public LoginResponse gainThreeTokens(@AuthenticationPrincipal CurrentUser currentUser,
                                          @RequestBody Map<String, Object> token) {
         if (gameService.checkTokenGain(token, currentUser)) {
-            gameService.addTokens(token, currentUser);
-            return new LoginResponse("gained three tokens");
+            String tokens = gameService.addTokens(token, currentUser);
+            return new LoginResponse(tokens);
         }
         return new LoginResponse("bad request");
     }
@@ -64,8 +64,8 @@ public class GameController {
     public LoginResponse gainMixedTokens(@AuthenticationPrincipal CurrentUser currentUser,
                                          @RequestBody Map<String, Object> token) {
         if (gameService.checkMixedTokenGain(token, currentUser)) {
-            gameService.addTokens(token, currentUser);
-            return new LoginResponse("gained mixed tokens");
+            String tokens = gameService.addTokens(token, currentUser);
+            return new LoginResponse(tokens);
         }
         return new LoginResponse("bad request");
     }

@@ -19,13 +19,15 @@ public interface GameService {
 
     boolean checkTokenGain(Map<String, Object> token, CurrentUser currentUser);
 
-    void addTokens(String token, CurrentUser currentUser);
+    String addTokens(String token, CurrentUser currentUser);
 
-    void addTokens(Map<String, Object> token, CurrentUser currentUser);
+    String addTokens(Map<String, Object> token, CurrentUser currentUser);
 
     boolean checkBuyCard(String cardId, CurrentUser currentUser);
 
     void buyCard(String cardId, CurrentUser currentUser);
 
     boolean checkMixedTokenGain(Map<String, Object> token, CurrentUser currentUser);
+
+    int howManyTokensNeedToBeGivenBack(Player player);
 }

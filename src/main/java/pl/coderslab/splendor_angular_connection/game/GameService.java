@@ -26,4 +26,6 @@ public interface GameService {
     boolean checkBuyCard(String cardId, CurrentUser currentUser);
 
     void buyCard(String cardId, CurrentUser currentUser);
+
+    boolean checkMixedTokenGain(Map<String, Object> token, CurrentUser currentUser);
 }

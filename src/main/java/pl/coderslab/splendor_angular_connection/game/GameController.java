@@ -59,4 +59,15 @@ public class GameController {
         }
         return new LoginResponse("bad request");
     }
+
+    @PostMapping("/gainMixedTokens")
+    public LoginResponse gainMixedTokens(@AuthenticationPrincipal CurrentUser currentUser,
+                                         @RequestBody Map<String, Object> token) {
+        if (gameService.checkMixedTokenGain(token, currentUser)) {
+            gameService.addTokens(token, currentUser);
+            return new LoginResponse("gained mixed tokens");
+        }
+        return new LoginResponse("bad request");
+    }
+
 }

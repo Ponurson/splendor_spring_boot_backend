@@ -7,6 +7,7 @@ import pl.coderslab.splendor_angular_connection.auth.CurrentUser;
 import pl.coderslab.splendor_angular_connection.user.User;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Service
@@ -206,6 +207,21 @@ public class GameServiceImpl implements GameService {
         gameState.setLastPlayerName(currentUser.getUsername());
         playerRepository.save(player);
         gameStateRepository.save(gameState);
+    }
+
+    @Override
+    public boolean checkMixedTokenGain(Map<String, Object> token, CurrentUser currentUser) {
+        GameState gameState = currentUser.getUser().getGameState();
+        Set<String> keySet = token.keySet();
+        Set<String> set = keySet.stream()
+                .map(s -> (String) token.get(s))
+                .filter(s -> checkTokenWithGetter(s, gameState, 0))
+                .collect(Collectors.toSet());
+        int numberOfEmptyTokens = Arrays.stream(TokenType.values())
+                .filter(tokenType -> gameState.getTokensOnTable().get(tokenType) == 0)
+                .collect(Collectors.toList())
+                .size();
+        return set.size() == (5 - numberOfEmptyTokens);
     }
 
     private String getNextPlayer(GameState gameState) {

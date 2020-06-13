@@ -248,6 +248,41 @@ public class GameServiceImpl implements GameService {
         return Math.max(0, totalTokens - 10);
     }
 
+    @Override
+    public boolean checkTokensReturn(List<TokenType> tokens, CurrentUser currentUser) {
+        Map<TokenType, Integer> playerTokens = playerRepository.
+                findFirstByUser(currentUser.getUser())
+                .get().getPlayerTokens();
+        return tokens.stream().allMatch(tokenType -> playerTokens.get(tokenType)-1 >= 0);
+    }
+
+    @Override
+    public String returnTokens(List<TokenType> tokens, CurrentUser currentUser) {
+        GameState gameState = currentUser.getUser().getGameState();
+        //W związku z tym trzeba pamiętać o kasowaniu playerów
+        Player player = playerRepository.findFirstByUser(currentUser.getUser()).get();
+        Map<TokenType, Integer> playerTokens = player.getPlayerTokens();
+        Map<TokenType, Integer> tokensOnTable = gameState.getTokensOnTable();
+        tokens.stream()
+                .forEach(tokenType -> {
+                    playerTokens.put(tokenType, (playerTokens.get(tokenType) == null ? 0 : playerTokens.get(tokenType)) - 1);
+                    tokensOnTable.put(tokenType, (tokensOnTable.get(tokenType) == null ? 0 : tokensOnTable.get(tokenType)) + 1);
+                });
+        player.setPlayerTokens(playerTokens);
+        gameState.setTokensOnTable(tokensOnTable);
+        int i = howManyTokensNeedToBeGivenBack(player);
+        if (i == 0) {
+            gameState.setLastPlayerName(currentUser.getUsername());
+            playerRepository.save(player);
+            gameStateRepository.save(gameState);
+            return "Operation Confirmed";
+        } else {
+            playerRepository.save(player);
+            gameStateRepository.save(gameState);
+            return "Give back tokens";
+        }
+    }
+
     private String getNextPlayer(GameState gameState) {
         String lastPlayerName = gameState.getLastPlayerName();
         List<Player> players = gameState.getPlayers().stream()

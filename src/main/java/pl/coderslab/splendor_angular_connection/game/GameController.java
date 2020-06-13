@@ -7,6 +7,7 @@ import pl.coderslab.splendor_angular_connection.auth.CurrentUser;
 import pl.coderslab.splendor_angular_connection.auth.LoginResponse;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -66,6 +67,15 @@ public class GameController {
         if (gameService.checkMixedTokenGain(token, currentUser)) {
             String tokens = gameService.addTokens(token, currentUser);
             return new LoginResponse(tokens);
+        }
+        return new LoginResponse("bad request");
+    }
+    @PostMapping("/returnTokensToTable")
+    public LoginResponse returnTokensToTable(@AuthenticationPrincipal CurrentUser currentUser,
+                                             @RequestBody List<TokenType> tokens){
+        if (gameService.checkTokensReturn(tokens, currentUser)) {
+            String answer = gameService.returnTokens(tokens, currentUser);
+            return new LoginResponse(answer);
         }
         return new LoginResponse("bad request");
     }

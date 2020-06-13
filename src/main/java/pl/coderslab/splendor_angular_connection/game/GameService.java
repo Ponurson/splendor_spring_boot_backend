@@ -30,4 +30,8 @@ public interface GameService {
     boolean checkMixedTokenGain(Map<String, Object> token, CurrentUser currentUser);
 
     int howManyTokensNeedToBeGivenBack(Player player);
+
+    boolean checkTokensReturn(List<TokenType> tokens, CurrentUser currentUser);
+
+    String returnTokens(List<TokenType> tokens, CurrentUser currentUser);
 }

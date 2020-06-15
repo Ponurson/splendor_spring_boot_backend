@@ -32,6 +32,9 @@ public class GameState {
     @ManyToMany(cascade = CascadeType.ALL)
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Card> cardsOnTable;
+    @ManyToMany
+    @LazyCollection(LazyCollectionOption.FALSE)
+    private List<Noble> nobles;
     private String lastPlayerName;
 
     @ElementCollection

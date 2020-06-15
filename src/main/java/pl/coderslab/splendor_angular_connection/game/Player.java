@@ -32,6 +32,8 @@ public class Player {
     private Integer points;
     @ManyToMany
     private List<Card> cards;
+    @ManyToMany
+    private List<Noble> nobles;
 
     @ElementCollection
     @MapKeyColumn(name = "token_type")
@@ -43,16 +45,16 @@ public class Player {
         this.user = user;
         this.cards = new ArrayList<>();
         this.playerTokens = new HashMap<TokenType, Integer>();
-        Arrays.stream(TokenType.values()).forEach(tokenType -> playerTokens.put(tokenType,0));
+        Arrays.stream(TokenType.values()).forEach(tokenType -> playerTokens.put(tokenType, 0));
         this.points = 0;
     }
 
     public Map<TokenType, Integer> getMapOfCards() {
         HashMap<TokenType, Integer> cardProductMap = new HashMap<>();
-        Arrays.stream(TokenType.values()).forEach(tokenType -> cardProductMap.put(tokenType,0));
+        Arrays.stream(TokenType.values()).forEach(tokenType -> cardProductMap.put(tokenType, 0));
         cards.stream()
                 .map(Card::getProduces)
-                .forEach(tokenType -> cardProductMap.put(tokenType,cardProductMap.get(tokenType)+1));
+                .forEach(tokenType -> cardProductMap.put(tokenType, cardProductMap.get(tokenType) + 1));
         return cardProductMap;
     }
 
@@ -80,9 +82,14 @@ public class Player {
         card.getCost().forEach((tokenType, integer) -> {
             payment.put(tokenType,
                     Math.max(integer - (cardProducts.get(tokenType) != null ? cardProducts.get(tokenType) : 0), 0)
-                    );
-            playerTokens.put(tokenType,playerTokens.get(tokenType) - payment.get(tokenType));
+            );
+            playerTokens.put(tokenType, playerTokens.get(tokenType) - payment.get(tokenType));
         });
         return payment;
+    }
+
+    public void addNoble(Noble noble) {
+        nobles.add(noble);
+        points += noble.getPoints();
     }
 }

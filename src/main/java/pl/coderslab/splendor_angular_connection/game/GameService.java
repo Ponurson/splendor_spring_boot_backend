@@ -34,4 +34,8 @@ public interface GameService {
     boolean checkTokensReturn(List<TokenType> tokens, CurrentUser currentUser);
 
     String returnTokens(List<TokenType> tokens, CurrentUser currentUser);
+
+    boolean checkGoldToken(CurrentUser currentUser);
+
+    String addGoldToken(CurrentUser currentUser);
 }

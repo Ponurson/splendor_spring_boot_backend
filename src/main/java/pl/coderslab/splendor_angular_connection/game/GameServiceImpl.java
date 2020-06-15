@@ -48,6 +48,7 @@ public class GameServiceImpl implements GameService {
         int startTokens = players.size() == 4 ? 7 : players.size() + 2;
         HashMap<TokenType, Integer> tokensOnTable = new HashMap<>();
         Arrays.stream(TokenType.values()).forEach(tokenType -> tokensOnTable.put(tokenType, startTokens));
+        tokensOnTable.put(TokenType.GOLD, 5);
         gameState.setTokensOnTable(tokensOnTable);
 
         int noblesNum = players.size() + 1;
@@ -74,8 +75,16 @@ public class GameServiceImpl implements GameService {
         );
         gameState.setCardsOnTable(gameState.getCardsOnTable().stream()
                 .map(card -> {
-                    if (card.getCost().keySet().stream()
-                            .allMatch(tokenType -> card.getCost().get(tokenType) <= (localTokenMap.get(tokenType) == null ? 0 : localTokenMap.get(tokenType)))) {
+                    if (card
+                            .getCost()
+                            .keySet()
+                            .stream()
+                            .map(tokenType -> Math.max(0,
+                                    card
+                                            .getCost()
+                                            .get(tokenType)-(localTokenMap.get(tokenType) == null ? 0 : localTokenMap.get(tokenType))))
+                        .reduce(0,Integer::sum) <= localTokenMap.get(TokenType.GOLD)) {
+//                                    allMatch(tokenType -> card.getCost().get(tokenType) <= (localTokenMap.get(tokenType) == null ? 0 : localTokenMap.get(tokenType)))) {
                         card.setClickable(true);
                     }
                     return card;
@@ -299,6 +308,34 @@ public class GameServiceImpl implements GameService {
                     playerTokens.put(tokenType, (playerTokens.get(tokenType) == null ? 0 : playerTokens.get(tokenType)) - 1);
                     tokensOnTable.put(tokenType, (tokensOnTable.get(tokenType) == null ? 0 : tokensOnTable.get(tokenType)) + 1);
                 });
+        player.setPlayerTokens(playerTokens);
+        gameState.setTokensOnTable(tokensOnTable);
+        int i = howManyTokensNeedToBeGivenBack(player);
+        if (i == 0) {
+            boolean isDialogNeeded = giveNobleToPlayer(player, gameState);
+            return "Operation Confirmed";
+        } else {
+            playerRepository.save(player);
+            gameStateRepository.save(gameState);
+            return "Give back tokens";
+        }
+    }
+
+    @Override
+    public boolean checkGoldToken(CurrentUser currentUser) {
+        GameState gameState = currentUser.getUser().getGameState();
+        return gameState.getTokensOnTable().get(TokenType.GOLD) > 0;
+    }
+
+    @Override
+    public String addGoldToken(CurrentUser currentUser) {
+        GameState gameState = currentUser.getUser().getGameState();
+        //W związku z tym trzeba pamiętać o kasowaniu playerów
+        Player player = playerRepository.findFirstByUser(currentUser.getUser()).get();
+        Map<TokenType, Integer> playerTokens = player.getPlayerTokens();
+        Map<TokenType, Integer> tokensOnTable = gameState.getTokensOnTable();
+        playerTokens.put(TokenType.GOLD, (playerTokens.get(TokenType.GOLD) == null ? 0 : playerTokens.get(TokenType.GOLD)) + 1);
+        tokensOnTable.put(TokenType.GOLD, (tokensOnTable.get(TokenType.GOLD) == null ? 0 : tokensOnTable.get(TokenType.GOLD)) - 1);
         player.setPlayerTokens(playerTokens);
         gameState.setTokensOnTable(tokensOnTable);
         int i = howManyTokensNeedToBeGivenBack(player);

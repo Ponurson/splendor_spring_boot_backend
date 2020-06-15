@@ -5,5 +5,6 @@ public enum TokenType {
     EMERALD,
     RUBY,
     SAPPHIRE,
-    ONYX
+    ONYX,
+    GOLD
 }

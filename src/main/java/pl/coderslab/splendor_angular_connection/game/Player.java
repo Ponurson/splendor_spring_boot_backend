@@ -77,14 +77,21 @@ public class Player {
     public Map<TokenType, Integer> addCard(Card card) {
         HashMap<TokenType, Integer> payment = new HashMap<>();
         Map<TokenType, Integer> cardProducts = getMapOfCards();
+        card.getCost().forEach((tokenType, integer) -> {
+            int costAdjusted = Math.max(integer - (cardProducts.get(tokenType) != null ? cardProducts.get(tokenType) : 0), 0);
+            Integer numOfTokensOwnedByPlayer = playerTokens.get(tokenType);
+            if (costAdjusted > numOfTokensOwnedByPlayer){
+                payment.put(tokenType, numOfTokensOwnedByPlayer);
+                playerTokens.put(tokenType, 0);
+                payment.put(TokenType.GOLD,costAdjusted- numOfTokensOwnedByPlayer);
+                playerTokens.put(TokenType.GOLD, playerTokens.get(TokenType.GOLD)-(costAdjusted- numOfTokensOwnedByPlayer));
+            }else {
+                payment.put(tokenType, costAdjusted);
+                playerTokens.put(tokenType, numOfTokensOwnedByPlayer - costAdjusted);
+            }
+        });
         cards.add(card);
         points += card.getPoints();
-        card.getCost().forEach((tokenType, integer) -> {
-            payment.put(tokenType,
-                    Math.max(integer - (cardProducts.get(tokenType) != null ? cardProducts.get(tokenType) : 0), 0)
-            );
-            playerTokens.put(tokenType, playerTokens.get(tokenType) - payment.get(tokenType));
-        });
         return payment;
     }
 

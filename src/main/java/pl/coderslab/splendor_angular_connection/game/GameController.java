@@ -79,5 +79,13 @@ public class GameController {
         }
         return new LoginResponse("bad request");
     }
+    @PostMapping("/gainGoldToken")
+    public LoginResponse gainGoldToken(@AuthenticationPrincipal CurrentUser currentUser){
+        if (gameService.checkGoldToken(currentUser)) {
+            String answer = gameService.addGoldToken(currentUser);
+            return new LoginResponse(answer);
+        }
+        return new LoginResponse("bad request");
+    }
 
 }

@@ -80,10 +80,28 @@ public class GameController {
         return new LoginResponse("bad request");
     }
     @PostMapping("/gainGoldToken")
-    public LoginResponse gainGoldToken(@AuthenticationPrincipal CurrentUser currentUser){
+    public GameStateWrapper gainGoldToken(@AuthenticationPrincipal CurrentUser currentUser){
         if (gameService.checkGoldToken(currentUser)) {
-            String answer = gameService.addGoldToken(currentUser);
-            return new LoginResponse(answer);
+            GameStateWrapper gameState = gameService.addGoldToken(currentUser);
+            return gameState;
+        }
+        return gameService.getFullStateAtInit(currentUser);
+    }
+    @PostMapping("/reserveCard")
+    public LoginResponse reserveCard(@AuthenticationPrincipal CurrentUser currentUser,
+                                     @RequestBody String cardId){
+        if (gameService.checkReserveCard(cardId, currentUser)) {
+            String response = gameService.addCardToHand(cardId, currentUser);
+            return new LoginResponse(response);
+        }
+        return new LoginResponse("bad request");
+    }
+    @PostMapping("/reserveCardFromDeck")
+    public LoginResponse reserveCardFromDeck(@AuthenticationPrincipal CurrentUser currentUser,
+                                             @RequestBody String deckNr) {
+        if (gameService.checkReserveCard(deckNr, currentUser)) {
+            String response = gameService.addCardToHandFromDeck(deckNr, currentUser);
+            return new LoginResponse(response);
         }
         return new LoginResponse("bad request");
     }

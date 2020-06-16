@@ -37,5 +37,11 @@ public interface GameService {
 
     boolean checkGoldToken(CurrentUser currentUser);
 
-    String addGoldToken(CurrentUser currentUser);
+    GameStateWrapper addGoldToken(CurrentUser currentUser);
+
+    boolean checkReserveCard(String cardId, CurrentUser currentUser);
+
+    String addCardToHand(String cardId, CurrentUser currentUser);
+
+    String addCardToHandFromDeck(String deckNr, CurrentUser currentUser);
 }

@@ -23,9 +23,10 @@ public class GameState {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "game_id")
     private Long id;
-    @ElementCollection
+//    @ElementCollection
+    @OneToMany
     @LazyCollection(LazyCollectionOption.FALSE)
-    private List<Long> players;
+    private List<Player> players;
     @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Card> cards;

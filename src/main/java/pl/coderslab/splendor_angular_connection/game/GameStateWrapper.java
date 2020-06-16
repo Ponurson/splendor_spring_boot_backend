@@ -18,5 +18,6 @@ public class GameStateWrapper {
     private Map<TokenType,Integer> tokens;
     private Boolean isItMyTurn;
     private List<Noble> nobles;
+    private Boolean isItReserveTime;
 }
 

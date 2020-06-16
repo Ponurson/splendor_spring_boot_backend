@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.springframework.transaction.annotation.Transactional;
 import pl.coderslab.splendor_angular_connection.user.User;
 
 import javax.persistence.*;
@@ -31,9 +32,14 @@ public class Player {
     private User user;
     private Integer points;
     @ManyToMany
+    @LazyCollection(LazyCollectionOption.FALSE)
     private List<Card> cards;
     @ManyToMany
+    @LazyCollection(LazyCollectionOption.FALSE)
     private List<Noble> nobles;
+    @ManyToMany
+    @LazyCollection(LazyCollectionOption.FALSE)
+    private List<Card> cardsInHand;
 
     @ElementCollection
     @MapKeyColumn(name = "token_type")
@@ -44,6 +50,7 @@ public class Player {
     public Player(User user) {
         this.user = user;
         this.cards = new ArrayList<>();
+        this.cardsInHand = new ArrayList<>();
         this.playerTokens = new HashMap<TokenType, Integer>();
         Arrays.stream(TokenType.values()).forEach(tokenType -> playerTokens.put(tokenType, 0));
         this.points = 0;
@@ -98,5 +105,9 @@ public class Player {
     public void addNoble(Noble noble) {
         nobles.add(noble);
         points += noble.getPoints();
+    }
+
+    public void addCardToHand(Card card) {
+        cardsInHand.add(card);
     }
 }

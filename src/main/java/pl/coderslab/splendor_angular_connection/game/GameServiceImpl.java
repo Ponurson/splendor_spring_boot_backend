@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.coderslab.splendor_angular_connection.auth.CurrentUser;
 import pl.coderslab.splendor_angular_connection.user.User;
+import pl.coderslab.splendor_angular_connection.user.UserRepository;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -17,6 +18,7 @@ public class GameServiceImpl implements GameService {
     private final CardRepository cardRepository;
     private final PlayerRepository playerRepository;
     private final NobleRepository nobleRepository;
+    private final UserRepository userRepository;
 
     @Override
     public GameState startGame(List<User> challenged) {
@@ -25,7 +27,9 @@ public class GameServiceImpl implements GameService {
                 .map(Player::new)
                 .peek(playerRepository::save)
                 .collect(Collectors.toList());
+        Collections.shuffle(players);
         GameState gameState = new GameState();
+        gameState.setUserList(challenged);
         gameState.setPlayers(players);
         List<Card> cardList = cardRepository.findAll();
         ArrayList<Card> cardsOnTable = new ArrayList<>();
@@ -181,15 +185,7 @@ public class GameServiceImpl implements GameService {
         Map<TokenType, Integer> tokensOnTable = gameState.getTokensOnTable();
         tokensOnTable.put(tokenType, (tokensOnTable.get(tokenType) == null ? 0 : tokensOnTable.get(tokenType)) - 2);
         gameState.setTokensOnTable(tokensOnTable);
-        int i = howManyTokensNeedToBeGivenBack(player);
-        if (i == 0) {
-            boolean isDialogNeeded = giveNobleToPlayer(player, gameState);
-            return "Operation Confirmed";
-        } else {
-            playerRepository.save(player);
-            gameStateRepository.save(gameState);
-            return "Give back tokens";
-        }
+        return upkeep(gameState, player);
     }
 
     private boolean giveNobleToPlayer(Player player, GameState gameState) {
@@ -234,9 +230,17 @@ public class GameServiceImpl implements GameService {
                 });
         player.setPlayerTokens(playerTokens);
         gameState.setTokensOnTable(tokensOnTable);
+        return upkeep(gameState, player);
+    }
+
+    public String upkeep(GameState gameState, Player player) {
         int i = howManyTokensNeedToBeGivenBack(player);
         if (i == 0) {
             boolean isDialogNeeded = giveNobleToPlayer(player, gameState);
+            if (endGame(gameState)) {
+                gameState.setLastPlayerName("endGame");
+                gameStateRepository.save(gameState);
+            }
             return "Operation Confirmed";
         } else {
             playerRepository.save(player);
@@ -265,7 +269,7 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
-    public void buyCard(String cardId, CurrentUser currentUser) {
+    public String buyCard(String cardId, CurrentUser currentUser) {
         Random r = new Random();
         GameState gameState = currentUser.getUser().getGameState();
         Player player = playerRepository.findFirstByUser(currentUser.getUser()).get();
@@ -289,8 +293,7 @@ public class GameServiceImpl implements GameService {
             cardsInHand.remove(card);
             player.setCardsInHand(cardsInHand);
         }
-        boolean isDialogNeeded = giveNobleToPlayer(player, gameState);
-//        return "Operation Confirmed";
+       return upkeep(gameState,player);
     }
 
     @Override
@@ -336,15 +339,7 @@ public class GameServiceImpl implements GameService {
                 });
         player.setPlayerTokens(playerTokens);
         gameState.setTokensOnTable(tokensOnTable);
-        int i = howManyTokensNeedToBeGivenBack(player);
-        if (i == 0) {
-            boolean isDialogNeeded = giveNobleToPlayer(player, gameState);
-            return "Operation Confirmed";
-        } else {
-            playerRepository.save(player);
-            gameStateRepository.save(gameState);
-            return "Give back tokens";
-        }
+        return upkeep(gameState, player);
     }
 
     @Override
@@ -364,7 +359,6 @@ public class GameServiceImpl implements GameService {
         tokensOnTable.put(TokenType.GOLD, (tokensOnTable.get(TokenType.GOLD) == null ? 0 : tokensOnTable.get(TokenType.GOLD)) - 1);
         player.setPlayerTokens(playerTokens);
         gameState.setTokensOnTable(tokensOnTable);
-//        int i = howManyTokensNeedToBeGivenBack(player);
         gameState
                 .setCardsOnTable(
                         gameState
@@ -415,15 +409,7 @@ public class GameServiceImpl implements GameService {
         gameState.setCards(cardList);
         cardsOnTable.set(cardToChange, newCard);
         gameState.setCardsOnTable(cardsOnTable);
-        int i = howManyTokensNeedToBeGivenBack(player);
-        if (i == 0) {
-            boolean isDialogNeeded = giveNobleToPlayer(player, gameState);
-            return "Operation Confirmed";
-        } else {
-            playerRepository.save(player);
-            gameStateRepository.save(gameState);
-            return "Give back tokens";
-        }
+        return upkeep(gameState, player);
     }
 
     @Override
@@ -433,21 +419,45 @@ public class GameServiceImpl implements GameService {
         Player player = playerRepository.findFirstByUser(currentUser.getUser()).get();
         List<Card> cardList = gameState.getCards();
         List<Card> cardsFromLevelList = cardList.stream()
-                .filter(c -> Objects.equals(c.getLevel(),Integer.parseInt(deckNr)))
+                .filter(c -> Objects.equals(c.getLevel(), Integer.parseInt(deckNr)))
                 .collect(Collectors.toList());
         Card newCard = cardsFromLevelList.get(r.nextInt(cardsFromLevelList.size()));
         cardList.remove(newCard);
         gameState.setCards(cardList);
         player.addCardToHand(newCard);
-        int i = howManyTokensNeedToBeGivenBack(player);
-        if (i == 0) {
-            boolean isDialogNeeded = giveNobleToPlayer(player, gameState);
-            return "Operation Confirmed";
-        } else {
-            playerRepository.save(player);
-            gameStateRepository.save(gameState);
-            return "Give back tokens";
+        return upkeep(gameState, player);
+    }
+
+    @Override
+    public boolean endGame(GameState gameState) {
+        return gameState.getPlayers().stream().map(Player::getPoints).anyMatch(integer -> integer >= 0) &&
+                Objects.equals(gameState.getPlayers().get(0).getUser().getUsername(), getNextPlayer(gameState));
+
+    }
+
+    @Override
+    public void gameCleanup(CurrentUser currentUser) {
+        User user = currentUser.getUser();
+        Player player = playerRepository.findFirstByUser(user).get();
+        player.setHasSeenResults(true);
+        playerRepository.save(player);
+        GameState gameState = user.getGameState();
+        gameState.setPlayers(gameState.getPlayers()
+                .stream()
+                .map(player1 -> {
+                    return Objects.equals(player1.getId(), player.getId()) ? player : player1;
+                })
+                .collect(Collectors.toList()));
+        if (gameState.getPlayers().stream().allMatch(Player::getHasSeenResults)) {
+//            gameState.setPlayers(null);
+//            gameState.setCardsOnTable(null);
+//            gameState.setNobles(null);
+//            gameState.setTokensOnTable(null);
+            userRepository.saveAll(gameState.getUserList().stream().peek(user1 -> user1.setGameState(null)).collect(Collectors.toList()));
+            gameStateRepository.delete(gameState);
         }
+        user.setUserState("idle");
+        userRepository.save(user);
     }
 
     private String getNextPlayer(GameState gameState) {

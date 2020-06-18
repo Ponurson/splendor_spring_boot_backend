@@ -55,8 +55,8 @@ public class GameController {
     public LoginResponse buyCard(@AuthenticationPrincipal CurrentUser currentUser,
                                  @RequestBody String cardId) {
         if (gameService.checkBuyCard(cardId, currentUser)) {
-            gameService.buyCard(cardId, currentUser);
-            return new LoginResponse("gained three tokens");
+            String s = gameService.buyCard(cardId, currentUser);
+            return new LoginResponse(s);
         }
         return new LoginResponse("bad request");
     }
@@ -104,6 +104,11 @@ public class GameController {
             return new LoginResponse(response);
         }
         return new LoginResponse("bad request");
+    }
+    @GetMapping("/hasSeenResults")
+    public LoginResponse hasSeenResults(@AuthenticationPrincipal CurrentUser currentUser) {
+        gameService.gameCleanup(currentUser);
+        return new LoginResponse("Operation complete");
     }
 
 }

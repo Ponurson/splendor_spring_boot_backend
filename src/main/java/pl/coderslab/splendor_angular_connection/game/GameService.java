@@ -25,7 +25,7 @@ public interface GameService {
 
     boolean checkBuyCard(String cardId, CurrentUser currentUser);
 
-    void buyCard(String cardId, CurrentUser currentUser);
+    String buyCard(String cardId, CurrentUser currentUser);
 
     boolean checkMixedTokenGain(Map<String, Object> token, CurrentUser currentUser);
 
@@ -44,4 +44,8 @@ public interface GameService {
     String addCardToHand(String cardId, CurrentUser currentUser);
 
     String addCardToHandFromDeck(String deckNr, CurrentUser currentUser);
+
+    boolean endGame(GameState gameState);
+
+    void gameCleanup(CurrentUser currentUser);
 }

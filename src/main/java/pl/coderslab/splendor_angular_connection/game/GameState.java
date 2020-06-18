@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import pl.coderslab.splendor_angular_connection.user.User;
 
 import javax.persistence.*;
 import java.util.HashMap;
@@ -24,19 +25,25 @@ public class GameState {
     @Column(name = "game_id")
     private Long id;
 //    @ElementCollection
-    @OneToMany
+    @OneToMany(cascade = CascadeType.REMOVE)
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Player> players;
-    @ManyToMany
+//    @ManyToMany
+    @OneToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Card> cards;
-    @ManyToMany(cascade = CascadeType.ALL)
+//    @ManyToMany(cascade = CascadeType.ALL)
+    @OneToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Card> cardsOnTable;
-    @ManyToMany
+//    @ManyToMany
+    @OneToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Noble> nobles;
     private String lastPlayerName;
+    @OneToMany//(mappedBy = "gameState")
+    @LazyCollection(LazyCollectionOption.FALSE)
+    private List<User> userList;
 
     @ElementCollection
     @MapKeyColumn(name = "token_type")

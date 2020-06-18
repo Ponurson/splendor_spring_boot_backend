@@ -31,13 +31,16 @@ public class Player {
     @OneToOne
     private User user;
     private Integer points;
-    @ManyToMany
+    @OneToMany
+    //    @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Card> cards;
-    @ManyToMany
+    @OneToMany
+//    @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Noble> nobles;
-    @ManyToMany
+    @OneToMany
+//    @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Card> cardsInHand;
 
@@ -46,6 +49,7 @@ public class Player {
     @MapKeyEnumerated(EnumType.STRING)
     @LazyCollection(LazyCollectionOption.FALSE)
     private Map<TokenType, Integer> playerTokens;
+    private Boolean hasSeenResults;
 
     public Player(User user) {
         this.user = user;
@@ -54,6 +58,7 @@ public class Player {
         this.playerTokens = new HashMap<TokenType, Integer>();
         Arrays.stream(TokenType.values()).forEach(tokenType -> playerTokens.put(tokenType, 0));
         this.points = 0;
+        this.setHasSeenResults(false);
     }
 
     public Map<TokenType, Integer> getMapOfCards() {

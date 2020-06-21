@@ -19,5 +19,6 @@ public class GameStateWrapper {
     private Boolean isItMyTurn;
     private List<Noble> nobles;
     private Boolean isItReserveTime;
+    private String currentPlayerName;
 }
 

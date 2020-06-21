@@ -142,6 +142,7 @@ public class GameServiceImpl implements GameService {
         gameStateWrapper.setNobles(gameState.getNobles());
         gameStateWrapper.setIsItMyTurn(isItMyTurn);
         gameStateWrapper.setIsItReserveTime(false);
+        gameStateWrapper.setCurrentPlayerName(getNextPlayer(gameState));
         return gameStateWrapper;
     }
 
@@ -283,17 +284,22 @@ public class GameServiceImpl implements GameService {
             List<Card> cardsFromLevelList = cardList.stream()
                     .filter(c -> Objects.equals(c.getLevel(), card.getLevel()))
                     .collect(Collectors.toList());
-            Card newCard = cardsFromLevelList.get(r.nextInt(cardsFromLevelList.size()));
-            cardList.remove(newCard);
-            gameState.setCards(cardList);
-            cardsOnTable.set(cardToChange, newCard);
-            gameState.setCardsOnTable(cardsOnTable);
+            if (cardsFromLevelList.size() > 0) {
+                Card newCard = cardsFromLevelList.get(r.nextInt(cardsFromLevelList.size()));
+                cardList.remove(newCard);
+                gameState.setCards(cardList);
+                cardsOnTable.set(cardToChange, newCard);
+                gameState.setCardsOnTable(cardsOnTable);
+            } else {
+                cardsOnTable.set(cardToChange, cardRepository.findById(91L).get());
+                gameState.setCardsOnTable(cardsOnTable);
+            }
         } else {
             List<Card> cardsInHand = player.getCardsInHand();
             cardsInHand.remove(card);
             player.setCardsInHand(cardsInHand);
         }
-       return upkeep(gameState,player);
+        return upkeep(gameState, player);
     }
 
     @Override
@@ -344,6 +350,7 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public boolean checkGoldToken(CurrentUser currentUser) {
+        //tutaj jest problem należy trochę zmienić warunek żeby dało się wziąć kartę przy 0
         GameState gameState = currentUser.getUser().getGameState();
         return gameState.getTokensOnTable().get(TokenType.GOLD) > 0;
     }
@@ -430,7 +437,7 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public boolean endGame(GameState gameState) {
-        return gameState.getPlayers().stream().map(Player::getPoints).anyMatch(integer -> integer >= 0) &&
+        return gameState.getPlayers().stream().map(Player::getPoints).anyMatch(integer -> integer >= 15) &&
                 Objects.equals(gameState.getPlayers().get(0).getUser().getUsername(), getNextPlayer(gameState));
 
     }
@@ -449,10 +456,6 @@ public class GameServiceImpl implements GameService {
                 })
                 .collect(Collectors.toList()));
         if (gameState.getPlayers().stream().allMatch(Player::getHasSeenResults)) {
-//            gameState.setPlayers(null);
-//            gameState.setCardsOnTable(null);
-//            gameState.setNobles(null);
-//            gameState.setTokensOnTable(null);
             userRepository.saveAll(gameState.getUserList().stream().peek(user1 -> user1.setGameState(null)).collect(Collectors.toList()));
             gameStateRepository.delete(gameState);
         }

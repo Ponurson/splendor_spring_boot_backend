@@ -16,7 +16,7 @@ public class PlayerWrapper {
     private String playerName;
     private Integer points;
     private Map<TokenType, Integer> tokens;
-    private String cardsOwnedShort;
+    private Map<TokenType, Integer> cardsOwnedShort;
     private List<Card> cards;
     private List<Noble> nobles;
     private List<Card> cardsInHand;
@@ -25,7 +25,7 @@ public class PlayerWrapper {
         this.playerName = player.getUser().getUsername();
         this.points = player.getPoints();
         this.tokens = player.getPlayerTokens();
-        this.cardsOwnedShort = player.getMapOfCards().toString();
+        this.cardsOwnedShort = player.getMapOfCards();//.toString();
         this.cards = player.getCards();
         this.nobles = player.getNobles();
         this.cardsInHand = player.getCardsInHand();

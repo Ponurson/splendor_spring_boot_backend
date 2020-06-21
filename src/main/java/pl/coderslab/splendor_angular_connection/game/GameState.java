@@ -29,15 +29,15 @@ public class GameState {
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Player> players;
 //    @ManyToMany
-    @OneToMany
+    @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Card> cards;
 //    @ManyToMany(cascade = CascadeType.ALL)
-    @OneToMany
+    @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Card> cardsOnTable;
 //    @ManyToMany
-    @OneToMany
+    @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Noble> nobles;
     private String lastPlayerName;

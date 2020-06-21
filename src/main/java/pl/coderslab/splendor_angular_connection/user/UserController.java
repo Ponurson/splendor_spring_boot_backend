@@ -5,10 +5,15 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pl.coderslab.splendor_angular_connection.auth.CurrentUser;
 import pl.coderslab.splendor_angular_connection.auth.LoginResponse;
+import pl.coderslab.splendor_angular_connection.game.Player;
+import pl.coderslab.splendor_angular_connection.game.PlayerRepository;
 
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @CrossOrigin
 @RestController
@@ -17,6 +22,7 @@ public class UserController {
 
     private final UserService userService;
     private final UserRepository userRepository;
+    public final PlayerRepository playerRepository;
 
     @PostMapping("/register")
     public LoginResponse createUser(@RequestBody User user) {
@@ -30,11 +36,15 @@ public class UserController {
         return new LoginResponse("login successful");
     }
 
-    @GetMapping("/logout")
+    @PostMapping("/logout")
 //    tutaj jest problem bo jak stwierdzić że ktoś się wylogował jak zamknął przeglądarke?
 //    na razie nie będę tego używał, może się to da obejść
     public LoginResponse logOut(@AuthenticationPrincipal CurrentUser customUser) {
         userService.changeState(customUser, "logged_out");
+        Optional<Player> player = playerRepository.findFirstByUser(customUser.getUser());
+        if (player.isPresent()) {
+            playerRepository.delete(player.get());
+        }
         return new LoginResponse("logout successful");
     }
 
@@ -84,5 +94,9 @@ public class UserController {
                                   @AuthenticationPrincipal CurrentUser currentUser) {
         userService.joinGame(data, currentUser);
         return new LoginResponse("joined game");
+    }
+    @GetMapping("/userList")
+    public List<String> userList(){
+        return userRepository.findAll().stream().map(user -> user.getUsername()).collect(Collectors.toList());
     }
 }

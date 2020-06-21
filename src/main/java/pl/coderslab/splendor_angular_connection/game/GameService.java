@@ -25,7 +25,7 @@ public interface GameService {
 
     boolean checkBuyCard(String cardId, CurrentUser currentUser);
 
-    String buyCard(String cardId, CurrentUser currentUser);
+    String buyCard(String cardId, CurrentUser currentUser) throws Exception;
 
     boolean checkMixedTokenGain(Map<String, Object> token, CurrentUser currentUser);
 

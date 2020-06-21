@@ -34,7 +34,7 @@ public class Player {
     @OneToMany
     //    @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
-    private List<Card> cards;
+    private Set<Card> cards;
     @OneToMany
 //    @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
@@ -42,7 +42,7 @@ public class Player {
     @OneToMany
 //    @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
-    private List<Card> cardsInHand;
+    private Set<Card> cardsInHand;
 
     @ElementCollection
     @MapKeyColumn(name = "token_type")
@@ -53,8 +53,9 @@ public class Player {
 
     public Player(User user) {
         this.user = user;
-        this.cards = new ArrayList<>();
-        this.cardsInHand = new ArrayList<>();
+        this.cards = new HashSet<>() {
+        };
+        this.cardsInHand = new HashSet<>();
         this.playerTokens = new HashMap<TokenType, Integer>();
         Arrays.stream(TokenType.values()).forEach(tokenType -> playerTokens.put(tokenType, 0));
         this.points = 0;
@@ -86,26 +87,28 @@ public class Player {
                 '}';
     }
 
-    public Map<TokenType, Integer> addCard(Card card) {
+    public Map<TokenType, Integer> addCard(Card card) throws Exception {
         HashMap<TokenType, Integer> payment = new HashMap<>();
         Map<TokenType, Integer> cardProducts = getMapOfCards();
-        card.getCost().forEach((tokenType, integer) -> {
-            int costAdjusted = Math.max(integer - (cardProducts.get(tokenType) != null ? cardProducts.get(tokenType) : 0), 0);
-            Integer numOfTokensOwnedByPlayer = playerTokens.get(tokenType);
-            if (costAdjusted > numOfTokensOwnedByPlayer) {
-                payment.put(tokenType, numOfTokensOwnedByPlayer);
-                playerTokens.put(tokenType, 0);
-                payment.put(TokenType.GOLD, costAdjusted - numOfTokensOwnedByPlayer
-                        + (payment.get(TokenType.GOLD) != null ? payment.get(TokenType.GOLD) : 0));
-                playerTokens.put(TokenType.GOLD, playerTokens.get(TokenType.GOLD) - (costAdjusted - numOfTokensOwnedByPlayer));
-            } else {
-                payment.put(tokenType, costAdjusted);
-                playerTokens.put(tokenType, numOfTokensOwnedByPlayer - costAdjusted);
-            }
-        });
-        cards.add(card);
-        points += card.getPoints();
-        return payment;
+        if (!cards.contains(card)) {
+            card.getCost().forEach((tokenType, integer) -> {
+                int costAdjusted = Math.max(integer - (cardProducts.get(tokenType) != null ? cardProducts.get(tokenType) : 0), 0);
+                Integer numOfTokensOwnedByPlayer = playerTokens.get(tokenType);
+                if (costAdjusted > numOfTokensOwnedByPlayer) {
+                    payment.put(tokenType, numOfTokensOwnedByPlayer);
+                    playerTokens.put(tokenType, 0);
+                    payment.put(TokenType.GOLD, costAdjusted - numOfTokensOwnedByPlayer
+                            + (payment.get(TokenType.GOLD) != null ? payment.get(TokenType.GOLD) : 0));
+                    playerTokens.put(TokenType.GOLD, playerTokens.get(TokenType.GOLD) - (costAdjusted - numOfTokensOwnedByPlayer));
+                } else {
+                    payment.put(tokenType, costAdjusted);
+                    playerTokens.put(tokenType, numOfTokensOwnedByPlayer - costAdjusted);
+                }
+            });
+            cards.add(card);
+            points += card.getPoints();
+            return payment;
+        }else throw new Exception();
     }
 
     public void addNoble(Noble noble) {

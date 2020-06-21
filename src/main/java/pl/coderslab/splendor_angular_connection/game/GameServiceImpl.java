@@ -107,7 +107,7 @@ public class GameServiceImpl implements GameService {
                     }
                     return card;
                 })
-                .collect(Collectors.toList()));
+                .collect(Collectors.toSet()));
         gameState.setPlayers(gameState.getPlayers()
                 .stream()
                 .map(player1 -> {
@@ -273,8 +273,13 @@ public class GameServiceImpl implements GameService {
         GameState gameState = currentUser.getUser().getGameState();
         Player player = getPlayerFromGameState(currentUser, gameState);
         Card card = cardRepository.findById(Long.parseLong(cardId)).get();
-        Map<TokenType, Integer> payment = player.addCard(card);
-        gameState.addPayment(payment);
+        Map<TokenType, Integer> payment = null;
+        try {
+            payment = player.addCard(card);
+            gameState.addPayment(payment);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         List<Card> cardsOnTable = gameState.getCardsOnTable();
         int cardToChange = cardsOnTable.indexOf(card);
         if (cardToChange != -1) {
@@ -293,7 +298,7 @@ public class GameServiceImpl implements GameService {
                 gameState.setCardsOnTable(cardsOnTable);
             }
         } else {
-            List<Card> cardsInHand = player.getCardsInHand();
+            Set<Card> cardsInHand = player.getCardsInHand();
             cardsInHand.remove(card);
             player.setCardsInHand(cardsInHand);
         }

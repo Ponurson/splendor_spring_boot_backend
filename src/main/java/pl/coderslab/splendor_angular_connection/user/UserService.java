@@ -20,4 +20,6 @@ public interface UserService {
     void joinGame(HashMap<String, Object> data, CurrentUser currentUser);
 
     void checkInvites(User user);
+
+    void clearPreviousGames(CurrentUser customUser);
 }

@@ -6,8 +6,7 @@ import org.springframework.stereotype.Service;
 import pl.coderslab.splendor_angular_connection.auth.CurrentUser;
 import pl.coderslab.splendor_angular_connection.auth.Role;
 import pl.coderslab.splendor_angular_connection.auth.RoleRepository;
-import pl.coderslab.splendor_angular_connection.game.GameService;
-import pl.coderslab.splendor_angular_connection.game.GameState;
+import pl.coderslab.splendor_angular_connection.game.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -18,7 +17,9 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final GameStateRepository gameStateRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final PlayerRepository playerRepository;
     private final GameService gameService;
 
     @Override
@@ -44,7 +45,7 @@ public class UserServiceImpl implements UserService {
         for (String key : keySet) {
             Optional<User> player = userRepository.findByUsername(properInvitation.get(key));
             player.map(user -> {
-                if ("idle".equals(user.getUserState())){
+                if ("idle".equals(user.getUserState())) {
                     user.setUserState("challenged");
                     ArrayList<Long> users = new ArrayList<>();
                     users.add(currentUser.getUser().getId());
@@ -97,16 +98,38 @@ public class UserServiceImpl implements UserService {
 //            return;
 //        }
         user.setCurrentlyInteractingUsers(challenged.stream().map(User::getId).collect(Collectors.toList()));
-        if (challenged.stream().allMatch(user1 -> user1.getUserState().equals("waiting"))){
+        if (challenged.stream().allMatch(user1 -> user1.getUserState().equals("waiting"))) {
             challenged.add(user);
             GameState gameState = gameService.startGame(challenged);
             challenged.stream().forEach(user1 -> {
-                user1.setUserState("playing");
-                user1.setCurrentlyInteractingUsers(null);
-                user1.setGameState(gameState);
-                userRepository.save(user1);
+                        user1.setUserState("playing");
+                        user1.setCurrentlyInteractingUsers(null);
+                        user1.setGameState(gameState);
+                        userRepository.save(user1);
                     }
             );
+        }
+    }
+
+    @Override
+    public void clearPreviousGames(CurrentUser customUser) {
+        User user = customUser.getUser();
+        GameState gameState = user.getGameState();
+        if (gameState != null) {
+            List<Player> players = gameState.getPlayers();
+            Player player = gameService.getPlayerFromGameState(customUser, gameState);
+            if (player != null) {
+                user.setGameState(null);
+                userRepository.save(user);
+                players.remove(player);
+                if (players.size()==0){
+                    gameStateRepository.delete(gameState);
+                }else{
+                    gameState.setPlayers(players);
+                    gameStateRepository.save(gameState);
+                }
+                playerRepository.delete(player);
+            }
         }
     }
 }

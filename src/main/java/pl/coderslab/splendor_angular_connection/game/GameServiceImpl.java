@@ -477,8 +477,8 @@ public class GameServiceImpl implements GameService {
         }
         return null;
     }
-
-    private Player getPlayerFromGameState(CurrentUser currentUser, GameState gameState) {
+    @Override
+    public Player getPlayerFromGameState(CurrentUser currentUser, GameState gameState) {
         Optional<Player> optionalPlayer = gameState.getPlayers().stream()
                 .filter(player -> player.getUser().getUsername().equals(currentUser.getUsername()))
                 .findFirst();

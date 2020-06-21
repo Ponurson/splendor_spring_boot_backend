@@ -48,4 +48,6 @@ public interface GameService {
     boolean endGame(GameState gameState);
 
     void gameCleanup(CurrentUser currentUser);
+
+    Player getPlayerFromGameState(CurrentUser currentUser, GameState gameState);
 }

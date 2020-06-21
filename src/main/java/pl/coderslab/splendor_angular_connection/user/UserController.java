@@ -32,19 +32,15 @@ public class UserController {
 
     @GetMapping("/login")
     public LoginResponse logIn(@AuthenticationPrincipal CurrentUser customUser) {
-        userService.changeState(customUser, "idle");
         return new LoginResponse("login successful");
     }
 
-    @PostMapping("/logout")
+    @PostMapping("/veryStrangeLogout")
 //    tutaj jest problem bo jak stwierdzić że ktoś się wylogował jak zamknął przeglądarke?
 //    na razie nie będę tego używał, może się to da obejść
     public LoginResponse logOut(@AuthenticationPrincipal CurrentUser customUser) {
         userService.changeState(customUser, "logged_out");
-        Optional<Player> player = playerRepository.findFirstByUser(customUser.getUser());
-        if (player.isPresent()) {
-            playerRepository.delete(player.get());
-        }
+        userService.clearPreviousGames(customUser);
         return new LoginResponse("logout successful");
     }
 
@@ -96,7 +92,9 @@ public class UserController {
         return new LoginResponse("joined game");
     }
     @GetMapping("/userList")
-    public List<String> userList(){
+    public List<String> userList(@AuthenticationPrincipal CurrentUser currentUser){
+        userService.changeState(currentUser, "idle");
+        userService.clearPreviousGames(currentUser);
         return userRepository.findAll().stream().map(user -> user.getUsername()).collect(Collectors.toList());
     }
 }

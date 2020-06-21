@@ -178,8 +178,7 @@ public class GameServiceImpl implements GameService {
     public String addTokens(String token, CurrentUser currentUser) {
         GameState gameState = currentUser.getUser().getGameState();
         TokenType tokenType = TokenType.valueOf(token);
-        //W związku z tym trzeba pamiętać o kasowaniu playerów
-        Player player = playerRepository.findFirstByUser(currentUser.getUser()).get();
+        Player player = getPlayerFromGameState(currentUser, gameState);
         Map<TokenType, Integer> playerTokens = player.getPlayerTokens();
         playerTokens.put(tokenType, (playerTokens.get(tokenType) == null ? 0 : playerTokens.get(tokenType)) + 2);
         player.setPlayerTokens(playerTokens);
@@ -218,8 +217,7 @@ public class GameServiceImpl implements GameService {
     @Override
     public String addTokens(Map<String, Object> token, CurrentUser currentUser) {
         GameState gameState = currentUser.getUser().getGameState();
-        //W związku z tym trzeba pamiętać o kasowaniu playerów
-        Player player = playerRepository.findFirstByUser(currentUser.getUser()).get();
+        Player player = getPlayerFromGameState(currentUser, gameState);
         Map<TokenType, Integer> playerTokens = player.getPlayerTokens();
         Map<TokenType, Integer> tokensOnTable = gameState.getTokensOnTable();
         token.keySet().stream()
@@ -273,7 +271,7 @@ public class GameServiceImpl implements GameService {
     public String buyCard(String cardId, CurrentUser currentUser) {
         Random r = new Random();
         GameState gameState = currentUser.getUser().getGameState();
-        Player player = playerRepository.findFirstByUser(currentUser.getUser()).get();
+        Player player = getPlayerFromGameState(currentUser, gameState);
         Card card = cardRepository.findById(Long.parseLong(cardId)).get();
         Map<TokenType, Integer> payment = player.addCard(card);
         gameState.addPayment(payment);
@@ -334,8 +332,7 @@ public class GameServiceImpl implements GameService {
     @Override
     public String returnTokens(List<TokenType> tokens, CurrentUser currentUser) {
         GameState gameState = currentUser.getUser().getGameState();
-        //W związku z tym trzeba pamiętać o kasowaniu playerów
-        Player player = playerRepository.findFirstByUser(currentUser.getUser()).get();
+        Player player = getPlayerFromGameState(currentUser, gameState);
         Map<TokenType, Integer> playerTokens = player.getPlayerTokens();
         Map<TokenType, Integer> tokensOnTable = gameState.getTokensOnTable();
         tokens
@@ -350,7 +347,6 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public boolean checkGoldToken(CurrentUser currentUser) {
-        //tutaj jest problem należy trochę zmienić warunek żeby dało się wziąć kartę przy 0
         GameState gameState = currentUser.getUser().getGameState();
         return getPlayerFromGameState(currentUser, gameState).getCardsInHand().size() <= 3;
     }
@@ -358,8 +354,7 @@ public class GameServiceImpl implements GameService {
     @Override
     public GameStateWrapper addGoldToken(CurrentUser currentUser) {
         GameState gameState = currentUser.getUser().getGameState();
-        //W związku z tym trzeba pamiętać o kasowaniu playerów
-        Player player = playerRepository.findFirstByUser(currentUser.getUser()).get();//to trzeba jakoś powiązać z obiektem gameState
+        Player player = getPlayerFromGameState(currentUser, gameState);
         Map<TokenType, Integer> playerTokens = player.getPlayerTokens();
         Map<TokenType, Integer> tokensOnTable = gameState.getTokensOnTable();
         if (tokensOnTable.get(TokenType.GOLD) > 0) {
@@ -404,7 +399,7 @@ public class GameServiceImpl implements GameService {
     public String addCardToHand(String cardId, CurrentUser currentUser) {
         Random r = new Random();
         GameState gameState = currentUser.getUser().getGameState();
-        Player player = playerRepository.findFirstByUser(currentUser.getUser()).get();
+        Player player = getPlayerFromGameState(currentUser, gameState);
         Card card = cardRepository.findById(Long.parseLong(cardId)).get();
         player.addCardToHand(card);
         List<Card> cardsOnTable = gameState.getCardsOnTable();
@@ -425,7 +420,7 @@ public class GameServiceImpl implements GameService {
     public String addCardToHandFromDeck(String deckNr, CurrentUser currentUser) {
         Random r = new Random();
         GameState gameState = currentUser.getUser().getGameState();
-        Player player = playerRepository.findFirstByUser(currentUser.getUser()).get();
+        Player player = getPlayerFromGameState(currentUser, gameState);
         List<Card> cardList = gameState.getCards();
         List<Card> cardsFromLevelList = cardList.stream()
                 .filter(c -> Objects.equals(c.getLevel(), Integer.parseInt(deckNr)))

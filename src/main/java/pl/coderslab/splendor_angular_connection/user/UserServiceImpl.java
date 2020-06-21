@@ -90,12 +90,12 @@ public class UserServiceImpl implements UserService {
                 .map(aLong -> userRepository.findById(aLong).get())
                 .filter(user1 -> user1.getUserState().equals("challenged") || user1.getUserState().equals("waiting"))
                 .collect(Collectors.toList());
-        if (challenged.size() == 0) {
-            user.setUserState("idle");
-            user.setCurrentlyInteractingUsers(null);
-            userRepository.save(user);
-            return;
-        }
+//        if (challenged.size() == 0) {
+//            user.setUserState("idle");
+//            user.setCurrentlyInteractingUsers(null);
+//            userRepository.save(user);
+//            return;
+//        }
         user.setCurrentlyInteractingUsers(challenged.stream().map(User::getId).collect(Collectors.toList()));
         if (challenged.stream().allMatch(user1 -> user1.getUserState().equals("waiting"))){
             challenged.add(user);

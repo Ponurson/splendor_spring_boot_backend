@@ -92,12 +92,13 @@ public class Player {
         card.getCost().forEach((tokenType, integer) -> {
             int costAdjusted = Math.max(integer - (cardProducts.get(tokenType) != null ? cardProducts.get(tokenType) : 0), 0);
             Integer numOfTokensOwnedByPlayer = playerTokens.get(tokenType);
-            if (costAdjusted > numOfTokensOwnedByPlayer){
+            if (costAdjusted > numOfTokensOwnedByPlayer) {
                 payment.put(tokenType, numOfTokensOwnedByPlayer);
                 playerTokens.put(tokenType, 0);
-                payment.put(TokenType.GOLD,costAdjusted- numOfTokensOwnedByPlayer);
-                playerTokens.put(TokenType.GOLD, playerTokens.get(TokenType.GOLD)-(costAdjusted- numOfTokensOwnedByPlayer));
-            }else {
+                payment.put(TokenType.GOLD, costAdjusted - numOfTokensOwnedByPlayer
+                        + (payment.get(TokenType.GOLD) != null ? payment.get(TokenType.GOLD) : 0));
+                playerTokens.put(TokenType.GOLD, playerTokens.get(TokenType.GOLD) - (costAdjusted - numOfTokensOwnedByPlayer));
+            } else {
                 payment.put(tokenType, costAdjusted);
                 playerTokens.put(tokenType, numOfTokensOwnedByPlayer - costAdjusted);
             }

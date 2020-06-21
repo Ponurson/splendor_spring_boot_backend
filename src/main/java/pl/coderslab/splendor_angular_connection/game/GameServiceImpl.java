@@ -352,7 +352,7 @@ public class GameServiceImpl implements GameService {
     public boolean checkGoldToken(CurrentUser currentUser) {
         //tutaj jest problem należy trochę zmienić warunek żeby dało się wziąć kartę przy 0
         GameState gameState = currentUser.getUser().getGameState();
-        return gameState.getTokensOnTable().get(TokenType.GOLD) > 0;
+        return getPlayerFromGameState(currentUser, gameState).getCardsInHand().size() <= 3;
     }
 
     @Override
@@ -362,10 +362,12 @@ public class GameServiceImpl implements GameService {
         Player player = playerRepository.findFirstByUser(currentUser.getUser()).get();//to trzeba jakoś powiązać z obiektem gameState
         Map<TokenType, Integer> playerTokens = player.getPlayerTokens();
         Map<TokenType, Integer> tokensOnTable = gameState.getTokensOnTable();
-        playerTokens.put(TokenType.GOLD, (playerTokens.get(TokenType.GOLD) == null ? 0 : playerTokens.get(TokenType.GOLD)) + 1);
-        tokensOnTable.put(TokenType.GOLD, (tokensOnTable.get(TokenType.GOLD) == null ? 0 : tokensOnTable.get(TokenType.GOLD)) - 1);
-        player.setPlayerTokens(playerTokens);
-        gameState.setTokensOnTable(tokensOnTable);
+        if (tokensOnTable.get(TokenType.GOLD) > 0) {
+            playerTokens.put(TokenType.GOLD, (playerTokens.get(TokenType.GOLD) == null ? 0 : playerTokens.get(TokenType.GOLD)) + 1);
+            tokensOnTable.put(TokenType.GOLD, (tokensOnTable.get(TokenType.GOLD) == null ? 0 : tokensOnTable.get(TokenType.GOLD)) - 1);
+            player.setPlayerTokens(playerTokens);
+            gameState.setTokensOnTable(tokensOnTable);
+        }
         gameState
                 .setCardsOnTable(
                         gameState
@@ -479,5 +481,12 @@ public class GameServiceImpl implements GameService {
             return players.get(0).getUser().getUsername();
         }
         return null;
+    }
+
+    private Player getPlayerFromGameState(CurrentUser currentUser, GameState gameState) {
+        Optional<Player> optionalPlayer = gameState.getPlayers().stream()
+                .filter(player -> player.getUser().getUsername().equals(currentUser.getUsername()))
+                .findFirst();
+        return optionalPlayer.get();
     }
 }

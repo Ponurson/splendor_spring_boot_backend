@@ -10,6 +10,7 @@ import pl.coderslab.splendor_angular_connection.game.GameState;
 
 import javax.persistence.*;
 import javax.transaction.Transactional;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -38,4 +39,5 @@ public class User {
     private List<Long> currentlyInteractingUsers;
     @ManyToOne
     private GameState gameState;
+    private LocalDateTime lastOnline;
 }

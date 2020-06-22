@@ -55,13 +55,7 @@ public class GameController {
     public LoginResponse buyCard(@AuthenticationPrincipal CurrentUser currentUser,
                                  @RequestBody String cardId) {
         if (gameService.checkBuyCard(cardId, currentUser)) {
-            String s = null;
-            try {
-                s = gameService.buyCard(cardId, currentUser);
-            } catch (Exception e) {
-                e.printStackTrace();
-                return new LoginResponse("bad request");
-            }
+            String s = gameService.buyCard(cardId, currentUser);
             return new LoginResponse(s);
         }
         return new LoginResponse("bad request");

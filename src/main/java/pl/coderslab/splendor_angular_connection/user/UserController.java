@@ -9,6 +9,8 @@ import pl.coderslab.splendor_angular_connection.game.Player;
 import pl.coderslab.splendor_angular_connection.game.PlayerRepository;
 
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,19 +58,21 @@ public class UserController {
     @GetMapping("/userState")
     public Map<String, String> getUserState(@AuthenticationPrincipal CurrentUser customUser) {
         HashMap<String, String> responseMap = new HashMap<>();
-        String userState = customUser.getUser().getUserState();
+        User user = customUser.getUser();
+        String userState = user.getUserState();
         responseMap.put("state", userState);
         if ("host".equals(userState)) {
-            userService.checkInvites(customUser.getUser());
+            userService.checkInvites(user);
         } else if ("challenged".equals(userState)) {
             responseMap.put("challenger", userRepository.
-                    findById(customUser
-                            .getUser()
+                    findById(user
                             .getCurrentlyInteractingUsers()
                             .get(0)
                     ).get()
                     .getUsername());
         }
+        user.setLastOnline(LocalDateTime.now());
+        userRepository.save(user);
         return responseMap;
     }
 
@@ -95,6 +99,11 @@ public class UserController {
     public List<String> userList(@AuthenticationPrincipal CurrentUser currentUser){
         userService.changeState(currentUser, "idle");
         userService.clearPreviousGames(currentUser);
-        return userRepository.findAll().stream().map(user -> user.getUsername()).collect(Collectors.toList());
+        return userRepository.findAll()
+                .stream()
+                .filter(user -> user.getUserState().equals("idle") &&
+                        ChronoUnit.SECONDS.between(LocalDateTime.from(user.getLastOnline()),LocalDateTime.now()) < 4)
+                .map(user -> user.getUsername())
+                .collect(Collectors.toList());
     }
 }

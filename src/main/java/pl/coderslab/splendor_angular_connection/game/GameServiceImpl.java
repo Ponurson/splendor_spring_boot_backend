@@ -278,7 +278,7 @@ public class GameServiceImpl implements GameService {
             payment = player.addCard(card);
             gameState.addPayment(payment);
         } catch (Exception e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         }
         List<Card> cardsOnTable = gameState.getCardsOnTable();
         int cardToChange = cardsOnTable.indexOf(card);

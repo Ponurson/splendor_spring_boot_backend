@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
+import org.springframework.core.annotation.Order;
 import pl.coderslab.splendor_angular_connection.user.User;
 
 import javax.persistence.*;
@@ -24,24 +25,20 @@ public class GameState {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "game_id")
     private Long id;
-//    @ElementCollection
     @OneToMany(cascade = CascadeType.REMOVE)
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Player> players;
-//    @ManyToMany
     @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Card> cards;
-//    @ManyToMany(cascade = CascadeType.ALL)
     @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Card> cardsOnTable;
-//    @ManyToMany
     @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Noble> nobles;
     private String lastPlayerName;
-    @OneToMany//(mappedBy = "gameState")
+    @OneToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<User> userList;
 

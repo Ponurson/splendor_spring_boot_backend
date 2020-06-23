@@ -27,11 +27,8 @@ public class SplendorAngularConnectionApplication {
     protected static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 
-//        @Autowired
-//        private BCryptPasswordEncoder bCryptPasswordEncoder;
         @Autowired
-        private PasswordEncoder bCryptPasswordEncoder;
-
+        private BCryptPasswordEncoder bCryptPasswordEncoder;
 
         @Autowired
         private SpringDataUserDetailsService customUserDetailsService;

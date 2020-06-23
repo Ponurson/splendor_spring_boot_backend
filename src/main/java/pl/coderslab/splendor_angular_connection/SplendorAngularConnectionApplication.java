@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import pl.coderslab.splendor_angular_connection.auth.SpringDataUserDetailsService;
@@ -26,8 +27,11 @@ public class SplendorAngularConnectionApplication {
     protected static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 
+//        @Autowired
+//        private BCryptPasswordEncoder bCryptPasswordEncoder;
         @Autowired
-        private BCryptPasswordEncoder bCryptPasswordEncoder;
+        private PasswordEncoder bCryptPasswordEncoder;
+
 
         @Autowired
         private SpringDataUserDetailsService customUserDetailsService;

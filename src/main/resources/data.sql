@@ -91,7 +91,7 @@ INSERT INTO cards (level, points, produces, graphic) VALUES (3,4,2,'assets/card-
 INSERT INTO cards (level, points, produces, graphic) VALUES (3,4,2,'assets/card-89.png');
 INSERT INTO cards (level, points, produces, graphic) VALUES (3,5,2,'assets/card-90.png');
 INSERT INTO cards (level, points, produces, graphic) VALUES (0,0,0,'assets/back-1.png');
-INSERT INTO `nobles` VALUES (1,'assets/splendor_nobles-1.png',3);
+INSERT INTO `nobles`(graphic, points) VALUES ('assets/splendor_nobles-1.png',3);
 INSERT INTO `nobles` VALUES (2,'assets/splendor_nobles-2.png',3);
 INSERT INTO `nobles` VALUES (3,'assets/splendor_nobles-3.png',3),(4,'assets/splendor_nobles-4.png',3),(5,'assets/splendor_nobles-5.png',3),(6,'assets/splendor_nobles-6.png',3),(7,'assets/splendor_nobles-7.png',3),(8,'assets/splendor_nobles-8.png',3),(9,'assets/splendor_nobles-9.png',3),(10,'assets/splendor_nobles-10.png',3);
 INSERT INTO `noble_card_combination` VALUES (1,4,'EMERALD'),(1,4,'RUBY'),(2,3,'DIAMOND'),(2,3,'ONYX'),(2,3,'RUBY'),(3,4,'DIAMOND'),(3,4,'SAPPHIRE'),(4,4,'DIAMOND'),(4,4,'ONYX'),(5,4,'EMERALD'),(5,4,'SAPPHIRE'),(6,3,'EMERALD'),(6,3,'RUBY'),(6,3,'SAPPHIRE'),(7,3,'DIAMOND'),(7,3,'EMERALD'),(7,3,'SAPPHIRE'),(8,4,'ONYX'),(8,4,'RUBY'),(9,3,'ONYX'),(9,3,'SAPPHIRE'),(9,3,'DIAMOND'),(10,3,'EMERALD'),(10,3,'ONYX'),(10,3,'RUBY');

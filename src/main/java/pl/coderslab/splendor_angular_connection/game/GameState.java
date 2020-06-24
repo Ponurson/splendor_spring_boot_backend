@@ -33,7 +33,8 @@ public class GameState {
     private List<Card> cards;
     @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
-    private List<Card> cardsOnTable;
+    @MapKeyColumn(name = "position")
+    private Map<Integer,Card> cardsOnTable;
     @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Noble> nobles;

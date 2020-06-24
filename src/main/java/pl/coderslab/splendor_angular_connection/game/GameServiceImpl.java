@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.coderslab.splendor_angular_connection.auth.CurrentUser;
 import pl.coderslab.splendor_angular_connection.user.User;
 import pl.coderslab.splendor_angular_connection.user.UserRepository;
+import pl.coderslab.splendor_angular_connection.utils.Utils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -46,7 +47,7 @@ public class GameServiceImpl implements GameService {
             }
         }
         gameState.setCards(cardList);
-        gameState.setCardsOnTable(cardsOnTable);
+        gameState.setCardsOnTable(Utils.listToMap(cardsOnTable));
         int startTokens = players.size() == 4 ? 7 : players.size() + 2;
         HashMap<TokenType, Integer> tokensOnTable = new HashMap<>();
         Arrays.stream(TokenType.values()).forEach(tokenType -> tokensOnTable.put(tokenType, startTokens));
@@ -75,7 +76,7 @@ public class GameServiceImpl implements GameService {
         Arrays.stream(TokenType.values()).forEach(tokenType ->
                 localTokenMap.put(tokenType, tokensMap.get(tokenType) + tokensFromCards.get(tokenType))
         );
-        gameState.setCardsOnTable(gameState.getCardsOnTable().stream()
+        gameState.setCardsOnTable(Utils.listToMap(Utils.mapToList(gameState.getCardsOnTable()).stream()
                 .map(card -> {
                     if (card
                             .getCost()
@@ -90,7 +91,7 @@ public class GameServiceImpl implements GameService {
                     }
                     return card;
                 })
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList())));
 
         player.setCardsInHand(player.getCardsInHand().stream()
                 .map(card -> {
@@ -131,7 +132,7 @@ public class GameServiceImpl implements GameService {
         if (isItMyTurn) {
             gameState = checkPossibleActions(gameState, playerRepository.findFirstByUser(currentUser.getUser()).get());
         }
-        gameStateWrapper.setCardsOnTable(gameState.getCardsOnTable());
+        gameStateWrapper.setCardsOnTable(Utils.mapToList(gameState.getCardsOnTable()));
         gameStateWrapper.setPlayers(gameState
                 .getPlayers()
                 .stream()
@@ -255,7 +256,7 @@ public class GameServiceImpl implements GameService {
         if (currentUser.getUsername().equals(currentPlayer)) {
             GameState gameState1 = checkPossibleActions(gameState,
                     playerRepository.findFirstByUser(currentUser.getUser()).get());
-            return gameState1.getCardsOnTable().stream()
+            return Utils.mapToList(gameState1.getCardsOnTable()).stream()
                     .filter(card -> card.getId().equals(Long.parseLong(cardId)))
                     .anyMatch(Card::getClickable) || gameState1.getPlayers()
                     .stream()
@@ -280,7 +281,7 @@ public class GameServiceImpl implements GameService {
         } catch (Exception e) {
 //            e.printStackTrace();
         }
-        List<Card> cardsOnTable = gameState.getCardsOnTable();
+        List<Card> cardsOnTable = Utils.mapToList(gameState.getCardsOnTable());
         int cardToChange = cardsOnTable.indexOf(card);
         if (cardToChange != -1) {
             List<Card> cardList = gameState.getCards();
@@ -292,10 +293,10 @@ public class GameServiceImpl implements GameService {
                 cardList.remove(newCard);
                 gameState.setCards(cardList);
                 cardsOnTable.set(cardToChange, newCard);
-                gameState.setCardsOnTable(cardsOnTable);
+                gameState.setCardsOnTable(Utils.listToMap(cardsOnTable));
             } else {
                 cardsOnTable.set(cardToChange, cardRepository.findById(91L).get());
-                gameState.setCardsOnTable(cardsOnTable);
+                gameState.setCardsOnTable(Utils.listToMap(cardsOnTable));
             }
         } else {
             Set<Card> cardsInHand = player.getCardsInHand();
@@ -369,19 +370,18 @@ public class GameServiceImpl implements GameService {
             gameState.setTokensOnTable(tokensOnTable);
         }
         gameState
-                .setCardsOnTable(
-                        gameState
-                                .getCardsOnTable()
+                .setCardsOnTable(Utils.listToMap(
+                        Utils.mapToList(gameState.getCardsOnTable())
                                 .stream()
                                 .map(card -> {
                                     card.setClickable(true);
                                     return card;
                                 })
-                                .collect(Collectors.toList()));
+                                .collect(Collectors.toList())));
         playerRepository.save(player);
         gameStateRepository.save(gameState);
         GameStateWrapper gameStateWrapper = new GameStateWrapper();
-        gameStateWrapper.setCardsOnTable(gameState.getCardsOnTable());
+        gameStateWrapper.setCardsOnTable(Utils.mapToList(gameState.getCardsOnTable()));
         gameStateWrapper.setPlayers(gameState
                 .getPlayers()
                 .stream()
@@ -407,7 +407,7 @@ public class GameServiceImpl implements GameService {
         Player player = getPlayerFromGameState(currentUser, gameState);
         Card card = cardRepository.findById(Long.parseLong(cardId)).get();
         player.addCardToHand(card);
-        List<Card> cardsOnTable = gameState.getCardsOnTable();
+        List<Card> cardsOnTable = Utils.mapToList(gameState.getCardsOnTable());
         int cardToChange = cardsOnTable.indexOf(card);
         List<Card> cardList = gameState.getCards();
         List<Card> cardsFromLevelList = cardList.stream()
@@ -417,7 +417,7 @@ public class GameServiceImpl implements GameService {
         cardList.remove(newCard);
         gameState.setCards(cardList);
         cardsOnTable.set(cardToChange, newCard);
-        gameState.setCardsOnTable(cardsOnTable);
+        gameState.setCardsOnTable(Utils.listToMap(cardsOnTable));
         return upkeep(gameState, player);
     }
 

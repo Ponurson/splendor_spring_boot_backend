@@ -48,15 +48,15 @@ public class SplendorAngularConnectionApplication {
                     .csrf().disable();
             // @formatter:on
         }
+    }
 
-        @Bean
-        public BCryptPasswordEncoder passwordEncoder() {
-            return new BCryptPasswordEncoder();
-        }
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-        @Bean
-        public SpringDataUserDetailsService customUserDetailsService() {
-            return new SpringDataUserDetailsService();
-        }
+    @Bean
+    public SpringDataUserDetailsService customUserDetailsService() {
+        return new SpringDataUserDetailsService();
     }
 }

@@ -76,11 +76,11 @@ public class UserController {
         return responseMap;
     }
 
-    @GetMapping("/admin")
-    public String userInfo(@AuthenticationPrincipal CurrentUser customUser) {
-        User entityUser = customUser.getUser();
-        return "Hello " + entityUser.getUsername();
-    }
+//    @GetMapping("/admin")
+//    public String userInfo(@AuthenticationPrincipal CurrentUser customUser) {
+//        User entityUser = customUser.getUser();
+//        return "Hello " + entityUser.getUsername();
+//    }
 
     @PostMapping("/resignFromGame")
     public LoginResponse resignFromGame(@RequestBody HashMap<String, Object> data,

@@ -4,7 +4,7 @@ Splendor w wersji Web App z uwagą na stworzenie wygodnego interfejsu dla smartf
 Opis:
 Turowa gra planszowa/karciana. Aby nowy użytkownik mógł zagrać musi się zarejestrować a następnie zalogować. Po zalogowaniu ma możliwość wyzwania do trzech aktualnie zalogowanych graczy. Wyzwanemu graczowi pokazuje się dialog umożliwiający podjęcie wyzwania. Po zaakceptowaniu lub odrzuceniu wyzwania wszyscy gracze którzy zaakceptowali zostają przeniesieni do rozgrywki. Celem gry jest zdobycie jak największej liczby punktów, gracz w swojej turze może dobrać zasoby lub za te zasoby kupić karty. wszystkie karty produkują co turę 1 zasób, część z nich warta jest też punkty.
 
-Aplikacja REST, frontend wykonany w Angularze z wykorzystaniem , autentykacja przez BASIC AUTH, postawiony na github pages(). Backend - Spring Boot ze Spring Security postawiony na Heroku, baza Heroku Postgres
+Aplikacja REST, frontend wykonany w Angularze z wykorzystaniem , autentykacja przez BASIC AUTH, postawiony na github pages(https://ponurson.github.io/splendor_angular_frontend/). Backend - Spring Boot ze Spring Security postawiony na Heroku, baza Heroku Postgres
 
 Uwagi:
 wylogowanie się lub przejście/cofnięcie do home powoduje usunięcie z rozgrywki/usuniećie gry jeżeli jest się ostatnim graczem, odświerzanie nie powinno powodować usunięcia z gry.

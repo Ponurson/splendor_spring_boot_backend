@@ -1,5 +1,5 @@
 Temat aplikacji:
-Splendor w wersji Web App z uwagą na stworzenie wygodnego interfejsu dla smartfonów w orientacji pionowej
+Splendor w wersji Web App. Szczególna uwaga położona na stworzenie wygodnego interfejsu dla smartfonów w orientacji pionowej
 
 Opis:
 Turowa gra planszowa/karciana. Aby nowy użytkownik mógł zagrać musi się zarejestrować a następnie zalogować. Po zalogowaniu ma możliwość wyzwania do trzech aktualnie zalogowanych graczy. Wyzwanemu graczowi pokazuje się dialog umożliwiający podjęcie wyzwania. Po zaakceptowaniu lub odrzuceniu wyzwania wszyscy gracze którzy zaakceptowali zostają przeniesieni do rozgrywki. Celem gry jest zdobycie jak największej liczby punktów, gracz w swojej turze może dobrać zasoby lub za te zasoby kupić karty. wszystkie karty produkują co turę 1 zasób, część z nich warta jest też punkty.

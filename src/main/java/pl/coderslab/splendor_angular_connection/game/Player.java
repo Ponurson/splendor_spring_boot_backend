@@ -31,16 +31,13 @@ public class Player {
     @OneToOne
     private User user;
     private Integer points;
-    @OneToMany
-    //    @ManyToMany
+    @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private Set<Card> cards;
-    @OneToMany
-//    @ManyToMany
+    @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private List<Noble> nobles;
-    @OneToMany
-//    @ManyToMany
+    @ManyToMany
     @LazyCollection(LazyCollectionOption.FALSE)
     private Set<Card> cardsInHand;
 

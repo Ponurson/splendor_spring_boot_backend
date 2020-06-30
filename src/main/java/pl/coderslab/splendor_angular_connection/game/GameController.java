@@ -15,7 +15,6 @@ import java.util.Map;
 @RequestMapping("/game")
 @AllArgsConstructor
 public class GameController {
-    private final GameStateRepository gameStateRepository;
     private final GameService gameService;
 
     @GetMapping("/getState")
@@ -82,8 +81,7 @@ public class GameController {
     @PostMapping("/gainGoldToken")
     public GameStateWrapper gainGoldToken(@AuthenticationPrincipal CurrentUser currentUser){
         if (gameService.checkGoldToken(currentUser)) {
-            GameStateWrapper gameState = gameService.addGoldToken(currentUser);
-            return gameState;
+            return gameService.addGoldToken(currentUser);
         }
         return gameService.getFullStateAtInit(currentUser);
     }

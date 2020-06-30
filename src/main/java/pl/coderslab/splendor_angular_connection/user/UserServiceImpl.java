@@ -33,7 +33,7 @@ public class UserServiceImpl implements UserService {
         user.setEnabled(1);
         user.setUserState("logged_out");
         Role userRole = roleRepository.findByName("ROLE_USER");
-        user.setRoles(new HashSet<Role>(Arrays.asList(userRole)));
+        user.setRoles(new HashSet<>(Collections.singletonList(userRole)));
         userRepository.save(user);
     }
 
@@ -101,7 +101,7 @@ public class UserServiceImpl implements UserService {
         if (challenged.stream().allMatch(user1 -> user1.getUserState().equals("waiting"))) {
             challenged.add(user);
             GameState gameState = gameService.startGame(challenged);
-            challenged.stream().forEach(user1 -> {
+            challenged.forEach(user1 -> {
                         user1.setUserState("playing");
                         user1.setCurrentlyInteractingUsers(null);
                         user1.setGameState(gameState);

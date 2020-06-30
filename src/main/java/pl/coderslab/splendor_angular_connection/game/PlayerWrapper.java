@@ -5,9 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor
@@ -27,8 +27,8 @@ public class PlayerWrapper {
         this.points = player.getPoints();
         this.tokens = player.getPlayerTokens();
         this.cardsOwnedShort = player.getMapOfCards();//.toString();
-        this.cards = player.getCards().stream().collect(Collectors.toList());
+        this.cards = new ArrayList<>(player.getCards());
         this.nobles = player.getNobles();
-        this.cardsInHand = player.getCardsInHand().stream().collect(Collectors.toList());
+        this.cardsInHand = new ArrayList<>(player.getCardsInHand());
     }
 }

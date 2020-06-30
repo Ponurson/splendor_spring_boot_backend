@@ -6,16 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
-import org.springframework.transaction.annotation.Transactional;
 import pl.coderslab.splendor_angular_connection.user.User;
 
 import javax.persistence.*;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.summingInt;
 
 @Data
 @Builder
@@ -53,7 +47,7 @@ public class Player {
         this.cards = new HashSet<>() {
         };
         this.cardsInHand = new HashSet<>();
-        this.playerTokens = new HashMap<TokenType, Integer>();
+        this.playerTokens = new HashMap<>();
         Arrays.stream(TokenType.values()).forEach(tokenType -> playerTokens.put(tokenType, 0));
         this.points = 0;
         this.setHasSeenResults(false);

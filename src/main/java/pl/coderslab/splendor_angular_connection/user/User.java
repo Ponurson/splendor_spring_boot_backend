@@ -1,6 +1,5 @@
 package pl.coderslab.splendor_angular_connection.user;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,7 +8,6 @@ import pl.coderslab.splendor_angular_connection.auth.Role;
 import pl.coderslab.splendor_angular_connection.game.GameState;
 
 import javax.persistence.*;
-import javax.transaction.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;

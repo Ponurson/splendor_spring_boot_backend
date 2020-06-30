@@ -10,7 +10,7 @@ import java.util.Map;
 public class Utils {
     public static List<Card> mapToList(Map<Integer, Card> map) {
         ArrayList<Card> cards = new ArrayList<>();
-        map.forEach((integer, card) -> cards.add(integer, card));
+        map.forEach(cards::add);
         return cards;
     }
     public static Map<Integer, Card> listToMap(List<Card> cards){

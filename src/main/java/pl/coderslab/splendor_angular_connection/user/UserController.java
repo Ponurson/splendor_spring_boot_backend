@@ -5,16 +5,13 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pl.coderslab.splendor_angular_connection.auth.CurrentUser;
 import pl.coderslab.splendor_angular_connection.auth.LoginResponse;
-import pl.coderslab.splendor_angular_connection.game.Player;
 import pl.coderslab.splendor_angular_connection.game.PlayerRepository;
-
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @CrossOrigin
@@ -33,7 +30,7 @@ public class UserController {
     }
 
     @GetMapping("/login")
-    public LoginResponse logIn(@AuthenticationPrincipal CurrentUser customUser) {
+    public LoginResponse logIn() {
         return new LoginResponse("login successful");
     }
 
@@ -103,7 +100,7 @@ public class UserController {
                 .stream()
                 .filter(user -> user.getUserState().equals("idle") &&
                         ChronoUnit.SECONDS.between(LocalDateTime.from(user.getLastOnline()),LocalDateTime.now()) < 4)
-                .map(user -> user.getUsername())
+                .map(User::getUsername)
                 .collect(Collectors.toList());
     }
 }

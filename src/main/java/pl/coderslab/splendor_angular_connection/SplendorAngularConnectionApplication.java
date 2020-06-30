@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import pl.coderslab.splendor_angular_connection.auth.SpringDataUserDetailsService;
 
@@ -45,7 +46,9 @@ public class SplendorAngularConnectionApplication {
                     .antMatchers("/register").permitAll()
                     .anyRequest().hasRole("USER")
                     .and()
-                    .csrf().disable();
+                    .csrf().disable()
+            .sessionManagement()
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
             // @formatter:on
         }
     }

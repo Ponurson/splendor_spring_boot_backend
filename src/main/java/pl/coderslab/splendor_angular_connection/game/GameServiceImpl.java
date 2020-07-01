@@ -362,14 +362,6 @@ public class GameServiceImpl implements GameService {
     public GameStateWrapper addGoldToken(CurrentUser currentUser) {
         GameState gameState = currentUser.getUser().getGameState();
         Player player = getPlayerFromGameState(currentUser, gameState);
-        Map<TokenType, Integer> playerTokens = player.getPlayerTokens();
-        Map<TokenType, Integer> tokensOnTable = gameState.getTokensOnTable();
-        if (tokensOnTable.get(TokenType.GOLD) > 0) {
-            playerTokens.put(TokenType.GOLD, (playerTokens.get(TokenType.GOLD) == null ? 0 : playerTokens.get(TokenType.GOLD)) + 1);
-            tokensOnTable.put(TokenType.GOLD, (tokensOnTable.get(TokenType.GOLD) == null ? 0 : tokensOnTable.get(TokenType.GOLD)) - 1);
-            player.setPlayerTokens(playerTokens);
-            gameState.setTokensOnTable(tokensOnTable);
-        }
         gameState
                 .setCardsOnTable(utils.listToMap(
                         utils.mapToList(gameState.getCardsOnTable())
@@ -406,6 +398,16 @@ public class GameServiceImpl implements GameService {
         Random r = new Random();
         GameState gameState = currentUser.getUser().getGameState();
         Player player = getPlayerFromGameState(currentUser, gameState);
+
+        Map<TokenType, Integer> playerTokens = player.getPlayerTokens();
+        Map<TokenType, Integer> tokensOnTable = gameState.getTokensOnTable();
+        if (tokensOnTable.get(TokenType.GOLD) > 0) {
+            playerTokens.put(TokenType.GOLD, (playerTokens.get(TokenType.GOLD) == null ? 0 : playerTokens.get(TokenType.GOLD)) + 1);
+            tokensOnTable.put(TokenType.GOLD, (tokensOnTable.get(TokenType.GOLD) == null ? 0 : tokensOnTable.get(TokenType.GOLD)) - 1);
+            player.setPlayerTokens(playerTokens);
+            gameState.setTokensOnTable(tokensOnTable);
+        }
+
         Card card = cardRepository.findById(Long.parseLong(cardId)).get();
         player.addCardToHand(card);
         List<Card> cardsOnTable = utils.mapToList(gameState.getCardsOnTable());

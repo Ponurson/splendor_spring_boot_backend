@@ -79,7 +79,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public void joinGame(HashMap<String, Object> data, CurrentUser currentUser) {
         User user1 = currentUser.getUser();
-//        user1.setCurrentlyInteractingUsers(null);
         user1.setUserState("waiting");
         userRepository.save(user1);
     }

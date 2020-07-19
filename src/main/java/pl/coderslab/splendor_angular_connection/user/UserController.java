@@ -94,13 +94,17 @@ public class UserController {
     }
     @GetMapping("/userList")
     public List<String> userList(@AuthenticationPrincipal CurrentUser currentUser){
-        userService.changeState(currentUser, "idle");
-        userService.clearPreviousGames(currentUser);
         return userRepository.findAll()
                 .stream()
                 .filter(user -> user.getUserState().equals("idle") &&
                         ChronoUnit.SECONDS.between(LocalDateTime.from(user.getLastOnline()),LocalDateTime.now()) < 4)
                 .map(User::getUsername)
                 .collect(Collectors.toList());
+    }
+    @GetMapping("/homeInit")
+    public LoginResponse homeInit(@AuthenticationPrincipal CurrentUser currentUser){
+        userService.changeState(currentUser, "idle");
+        userService.clearPreviousGames(currentUser);
+        return new LoginResponse("home init");
     }
 }

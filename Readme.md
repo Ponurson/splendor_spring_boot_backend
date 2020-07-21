@@ -1,3 +1,4 @@
+# splendor_spring_boot
 Temat aplikacji:
 Splendor w wersji Web App. Szczególna uwaga położona na stworzenie wygodnego interfejsu dla smartfonów w orientacji pionowej
 

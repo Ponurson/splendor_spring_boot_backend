@@ -48,9 +48,9 @@ public class SplendorAngularConnectionApplication {
                     .and()
                     .csrf().disable()
             .sessionManagement()
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            .maximumSessions(1)
-                    .maxSessionsPreventsLogin(true);
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+//            .maximumSessions(1)
+//                    .maxSessionsPreventsLogin(true);
             // @formatter:on
         }
     }

@@ -25,11 +25,11 @@ public class GameServiceImpl implements GameService {
     @Override
     public GameState startGame(List<User> challenged) {
         Random r = new Random();
+        Collections.shuffle(challenged);
         List<Player> players = challenged.stream()
                 .map(Player::new)
                 .peek(playerRepository::save)
                 .collect(Collectors.toList());
-        Collections.shuffle(players);
         GameState gameState = new GameState();
         gameState.setUserList(challenged);
         gameState.setPlayers(players);

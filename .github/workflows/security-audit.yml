@@ -1,0 +1,26 @@
+name: Security audit
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  dependency-check:
+    runs-on: ubuntu-latest
+    env:
+      MAVEN_OPTS: -Xmx2g
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+      - run: >
+          ./mvnw -B org.owasp:dependency-check-maven:12.2.2:check
+          -DfailBuildOnCVSS=7
+          -DskipTestScope=false
+          -DskipProvidedScope=true
+          -DskipSystemScope=true
+          -DoutputDirectory=dependency-check-report
+          -Dformat=JSON

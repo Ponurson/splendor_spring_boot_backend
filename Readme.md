@@ -4,3 +4,19 @@ App Subject: Web App version of popular game Splendor, concetrated on smartphone
 Description: Turn based card/board game. New user has to register and login. User is then redirected to home page from where he can invite up to 3 other currently logged in users. Challenged players then need to confirm invitation to start proper game. Objective is to gain most points, during their turn players can either pick resources or buy card for resources. All bought cards produce 1 resource every turn, cards are also sometimes worth points.
 
 REST app, with frontend developed in Angular, basic auth for security, can be tested through github pages: https://ponurson.github.io/splendor_angular_frontend/ Backend - Spring Boot with Spring Security on Heroku with Heroku Postgres
+
+## Security audit
+
+Run OWASP Dependency-Check against runtime and test dependencies:
+
+```sh
+./mvnw -B org.owasp:dependency-check-maven:12.2.2:check \
+  -DfailBuildOnCVSS=7 \
+  -DskipTestScope=false \
+  -DskipProvidedScope=true \
+  -DskipSystemScope=true \
+  -DoutputDirectory=dependency-check-report \
+  -Dformat=JSON
+```
+
+The command exits non-zero for CVSS 7+ findings, which covers high and critical vulnerabilities. It does not require secrets; OWASP downloads public vulnerability data during the scan.

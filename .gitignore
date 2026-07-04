@@ -1,6 +1,6 @@
 HELP.md
 target/
-!.mvn/wrapper/maven-wrapper.jar
+dependency-check-report/
 !**/src/main/**
 !**/src/test/**
 
@@ -29,4 +29,7 @@ build/
 
 ### VS Code ###
 .vscode/
-/.mvn/
+/.mvn/*
+!/.mvn/wrapper/
+!/.mvn/wrapper/maven-wrapper.properties
+/.mvn/wrapper/maven-wrapper.jar

@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import pl.coderslab.splendor_angular_connection.auth.Role;
 import pl.coderslab.splendor_angular_connection.game.GameState;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;

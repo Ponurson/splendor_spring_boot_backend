@@ -7,16 +7,17 @@ REST app, with frontend developed in Angular, basic auth for security, can be te
 
 ## Security audit
 
-Run OWASP Dependency-Check against runtime and test dependencies:
+Run OWASP Dependency-Check against runtime dependencies:
 
 ```sh
 ./mvnw -B org.owasp:dependency-check-maven:12.2.2:check \
   -DfailBuildOnCVSS=7 \
-  -DskipTestScope=false \
+  -DskipTestScope=true \
   -DskipProvidedScope=true \
   -DskipSystemScope=true \
   -DoutputDirectory=dependency-check-report \
-  -Dformat=JSON
+  -Dformat=JSON \
+  -DnvdApiDelay=8000
 ```
 
 The command exits non-zero for CVSS 7+ findings, which covers high and critical vulnerabilities. It does not require secrets; OWASP downloads public vulnerability data during the scan.

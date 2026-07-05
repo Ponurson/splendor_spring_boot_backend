@@ -4,11 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 import pl.coderslab.splendor_angular_connection.user.User;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.*;
 
 @Data
@@ -25,20 +23,16 @@ public class Player {
     @OneToOne
     private User user;
     private Integer points;
-    @ManyToMany
-    @LazyCollection(LazyCollectionOption.FALSE)
+    @ManyToMany(fetch = FetchType.EAGER)
     private Set<Card> cards;
-    @ManyToMany
-    @LazyCollection(LazyCollectionOption.FALSE)
+    @ManyToMany(fetch = FetchType.EAGER)
     private List<Noble> nobles;
-    @ManyToMany
-    @LazyCollection(LazyCollectionOption.FALSE)
+    @ManyToMany(fetch = FetchType.EAGER)
     private Set<Card> cardsInHand;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @MapKeyColumn(name = "token_type")
     @MapKeyEnumerated(EnumType.STRING)
-    @LazyCollection(LazyCollectionOption.FALSE)
     private Map<TokenType, Integer> playerTokens;
     private Boolean hasSeenResults;
 

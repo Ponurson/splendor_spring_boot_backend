@@ -4,10 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Map;
 import java.util.Objects;
 
@@ -27,10 +25,9 @@ public class Card {
     private TokenType produces;
     private Integer level;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @MapKeyColumn(name = "token_type")
     @MapKeyEnumerated(EnumType.STRING)
-    @LazyCollection(LazyCollectionOption.FALSE)
     private Map<TokenType, Integer> cost;
 
     private String graphic;

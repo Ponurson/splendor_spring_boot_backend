@@ -4,11 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 import pl.coderslab.splendor_angular_connection.user.User;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.List;
 import java.util.Map;
 
@@ -23,28 +21,22 @@ public class GameState {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "game_id")
     private Long id;
-    @OneToMany(cascade = CascadeType.REMOVE)
-    @LazyCollection(LazyCollectionOption.FALSE)
+    @OneToMany(cascade = CascadeType.REMOVE, fetch = FetchType.EAGER)
     private List<Player> players;
-    @ManyToMany
-    @LazyCollection(LazyCollectionOption.FALSE)
+    @ManyToMany(fetch = FetchType.EAGER)
     private List<Card> cards;
-    @ManyToMany
-    @LazyCollection(LazyCollectionOption.FALSE)
+    @ManyToMany(fetch = FetchType.EAGER)
     @MapKeyColumn(name = "position")
     private Map<Integer,Card> cardsOnTable;
-    @ManyToMany
-    @LazyCollection(LazyCollectionOption.FALSE)
+    @ManyToMany(fetch = FetchType.EAGER)
     private List<Noble> nobles;
     private String lastPlayerName;
-    @OneToMany
-    @LazyCollection(LazyCollectionOption.FALSE)
+    @OneToMany(fetch = FetchType.EAGER)
     private List<User> userList;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @MapKeyColumn(name = "token_type")
     @MapKeyEnumerated(EnumType.STRING)
-    @LazyCollection(LazyCollectionOption.FALSE)
     private Map<TokenType, Integer> tokensOnTable;
 
     public void addPayment(Map<TokenType, Integer> payment){

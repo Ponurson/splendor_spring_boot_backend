@@ -4,10 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Map;
 
 @Data
@@ -26,10 +24,9 @@ public class Noble {
     @Transient
     private Boolean clickable;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @MapKeyColumn(name = "token_type")
     @MapKeyEnumerated(EnumType.STRING)
-    @LazyCollection(LazyCollectionOption.FALSE)
     private Map<TokenType, Integer> cardCombination;
 
 

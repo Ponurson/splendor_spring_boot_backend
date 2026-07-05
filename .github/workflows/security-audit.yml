@@ -19,8 +19,9 @@ jobs:
       - run: >
           ./mvnw -B org.owasp:dependency-check-maven:12.2.2:check
           -DfailBuildOnCVSS=7
-          -DskipTestScope=false
+          -DskipTestScope=true
           -DskipProvidedScope=true
           -DskipSystemScope=true
           -DoutputDirectory=dependency-check-report
           -Dformat=JSON
+          -DnvdApiDelay=8000

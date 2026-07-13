@@ -19,8 +19,8 @@ public class GameController {
     @GetMapping("/getState")
     public HashMap<String, String> getGameState(@AuthenticationPrincipal CurrentUser currentUser) {
         HashMap<String, String> responseMap = new HashMap<>();
-        String gameState = currentUser.getUser().getGameState().getLastPlayerName();
-        responseMap.put("state", gameState);
+        var state = currentUser.getUser().getGameState(); // null before a game is created -> 200 instead of NPE
+        responseMap.put("state", state == null ? null : state.getLastPlayerName());
         return responseMap;
     }
 

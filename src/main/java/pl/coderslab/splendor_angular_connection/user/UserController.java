@@ -1,10 +1,12 @@
 package pl.coderslab.splendor_angular_connection.user;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pl.coderslab.splendor_angular_connection.auth.CurrentUser;
 import pl.coderslab.splendor_angular_connection.auth.LoginResponse;
+import pl.coderslab.splendor_angular_connection.auth.TokenStore;
 import pl.coderslab.splendor_angular_connection.game.PlayerRepository;
 
 import java.time.LocalDateTime;
@@ -21,6 +23,7 @@ public class UserController {
     private final UserService userService;
     private final UserRepository userRepository;
     public final PlayerRepository playerRepository;
+    private final TokenStore tokenStore;
 
     @PostMapping("/register")
     public LoginResponse createUser(@RequestBody User user) {
@@ -29,16 +32,20 @@ public class UserController {
     }
 
     @GetMapping("/login")
-    public LoginResponse logIn() {
-        return new LoginResponse("login successful");
+    public LoginResponse logIn(@AuthenticationPrincipal CurrentUser customUser) {
+        return new LoginResponse("login successful", tokenStore.issue(customUser.getUsername()));
     }
 
     @PostMapping("/veryStrangeLogout")
 //    tutaj jest problem bo jak stwierdzić że ktoś się wylogował jak zamknął przeglądarke?
 //    na razie nie będę tego używał, może się to da obejść
-    public LoginResponse logOut(@AuthenticationPrincipal CurrentUser customUser) {
+    public LoginResponse logOut(@AuthenticationPrincipal CurrentUser customUser, HttpServletRequest request) {
         userService.changeState(customUser, "logged_out");
         userService.clearPreviousGames(customUser);
+        String header = request.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            tokenStore.revoke(header.substring("Bearer ".length()));
+        }
         return new LoginResponse("logout successful");
     }
 

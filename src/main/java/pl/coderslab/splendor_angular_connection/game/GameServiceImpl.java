@@ -122,6 +122,9 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public GameStateWrapper getFullStateAtInit(CurrentUser currentUser) {
+        if (currentUser.getUser().getGameState() == null) {
+            return null; // no active game yet -> 200 with empty body instead of NPE
+        }
         GameState gameState = gameStateRepository.findById(currentUser.getUser().getGameState().getId()).get();
         GameStateWrapper gameStateWrapper = new GameStateWrapper();
         boolean isItMyTurn = false;

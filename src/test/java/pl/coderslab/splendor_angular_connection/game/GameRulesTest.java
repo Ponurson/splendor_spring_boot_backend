@@ -4,6 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import pl.coderslab.splendor_angular_connection.auth.CurrentUser;
 import pl.coderslab.splendor_angular_connection.user.User;
+import pl.coderslab.splendor_angular_connection.utils.Utils;
 
 import java.util.*;
 
@@ -20,6 +21,12 @@ class GameRulesTest {
     private Player alicePlayer;
     private CurrentUser alice;
 
+    /** A card nobody can afford at the start of the game. */
+    private Card expensiveCard(long id) {
+        return Card.builder().id(id).level(1).points(0)
+                .cost(Map.of(TokenType.RUBY, 7)).build();
+    }
+
     @BeforeEach
     void setUp() {
         User aliceUser = User.builder().id(1L).username("alice").build();
@@ -32,13 +39,17 @@ class GameRulesTest {
         gameState = GameState.builder()
                 .players(List.of(alicePlayer, bobPlayer))
                 .tokensOnTable(tokensOnTable)
+                .cardsOnTable(new HashMap<>(Map.of(0, expensiveCard(1L), 1, expensiveCard(2L))))
+                .nobles(new ArrayList<>())
                 .lastPlayerName("init")
                 .build();
         aliceUser.setGameState(gameState);
         alice = new CurrentUser("alice", "x", List.of(), aliceUser);
         PlayerRepository playerRepository = mock(PlayerRepository.class);
         when(playerRepository.findFirstByUser(any())).thenReturn(Optional.of(alicePlayer));
-        gameService = new GameServiceImpl(null, null, playerRepository, null, null, null);
+        GameStateRepository gameStateRepository = mock(GameStateRepository.class);
+        when(gameStateRepository.findById(any())).thenReturn(Optional.of(gameState));
+        gameService = new GameServiceImpl(gameStateRepository, null, playerRepository, null, null, new Utils());
     }
 
     private Map<String, Object> payload(String... colors) {
@@ -106,5 +117,32 @@ class GameRulesTest {
     void notYourTurnMeansNoTokenGain() {
         gameState.setLastPlayerName("alice");
         assertThat(gameService.checkTokenGain("RUBY", alice)).isFalse();
+    }
+
+    @Test
+    void reserveModeSurvivesAReload() {
+        assertThat(gameService.addGoldToken(alice).getIsItReserveTime()).isTrue();
+        // getFullStateAtInit is what a page refresh calls: the mode must still be there,
+        // and every table card stays pickable even though none of them is affordable
+        GameStateWrapper afterReload = gameService.getFullStateAtInit(alice);
+        assertThat(afterReload.getIsItReserveTime()).isTrue();
+        assertThat(afterReload.getCardsOnTable()).allMatch(Card::getClickable);
+    }
+
+    @Test
+    void reserveModeDoesNotLeakToTheOtherPlayer() {
+        gameService.addGoldToken(alice);
+        User bobUser = gameState.getPlayers().get(1).getUser();
+        bobUser.setGameState(gameState);
+        CurrentUser bob = new CurrentUser("bob", "x", List.of(), bobUser);
+        assertThat(gameService.getFullStateAtInit(bob).getIsItReserveTime()).isFalse();
+    }
+
+    @Test
+    void completingTheTurnEndsReserveMode() {
+        gameService.addGoldToken(alice);
+        gameService.upkeep(gameState, alicePlayer);
+        assertThat(gameState.isReserveTime()).isFalse();
+        assertThat(gameService.getFullStateAtInit(alice).getIsItReserveTime()).isFalse();
     }
 }

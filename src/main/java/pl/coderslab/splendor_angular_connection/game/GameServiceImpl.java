@@ -135,8 +135,13 @@ public class GameServiceImpl implements GameService {
         } else {
             isItMyTurn = currentUser.getUsername().equals(getNextPlayer(gameState));
         }
+        // reserve mode belongs to whoever is mid-turn, so it only survives a refresh for that player
+        boolean isItReserveTime = isItMyTurn && gameState.isReserveTime();
         if (isItMyTurn) {
             gameState = checkPossibleActions(gameState, playerRepository.findFirstByUser(currentUser.getUser()).get());
+        }
+        if (isItReserveTime) {
+            markEveryCardClickable(gameState);
         }
         gameStateWrapper.setCardsOnTable(utils.mapToList(gameState.getCardsOnTable()));
         gameStateWrapper.setPlayers(gameState
@@ -148,7 +153,7 @@ public class GameServiceImpl implements GameService {
         gameStateWrapper.setTokens(gameState.getTokensOnTable());
         gameStateWrapper.setNobles(gameState.getNobles());
         gameStateWrapper.setIsItMyTurn(isItMyTurn);
-        gameStateWrapper.setIsItReserveTime(false);
+        gameStateWrapper.setIsItReserveTime(isItReserveTime);
         gameStateWrapper.setCurrentPlayerName(getNextPlayer(gameState));
         return gameStateWrapper;
     }
@@ -233,6 +238,8 @@ public class GameServiceImpl implements GameService {
     }
 
     public String upkeep(GameState gameState, Player player) {
+        // every completed action funnels through here, so this is the one place reserve mode ends
+        gameState.setReserveTime(false);
         int i = howManyTokensNeedToBeGivenBack(player);
         if (i == 0) {
             giveNobleToPlayer(player, gameState);
@@ -373,17 +380,8 @@ public class GameServiceImpl implements GameService {
     public GameStateWrapper addGoldToken(CurrentUser currentUser) {
         GameState gameState = currentUser.getUser().getGameState();
         Player player = getPlayerFromGameState(currentUser, gameState);
-        gameState
-                .setCardsOnTable(utils.listToMap(
-                        utils.mapToList(gameState.getCardsOnTable())
-                                .stream()
-                                .map(card -> {
-                                    if (card.getId() != 91L) {
-                                        card.setClickable(true);
-                                    }
-                                    return card;
-                                })
-                                .collect(Collectors.toList())));
+        gameState.setReserveTime(true);
+        markEveryCardClickable(gameState);
         playerRepository.save(player);
         gameStateRepository.save(gameState);
         GameStateWrapper gameStateWrapper = new GameStateWrapper();
@@ -399,6 +397,20 @@ public class GameServiceImpl implements GameService {
         gameStateWrapper.setIsItMyTurn(true);
         gameStateWrapper.setIsItReserveTime(true);
         return gameStateWrapper;
+    }
+
+    /** In reserve mode any real card on the table is a legal pick, not just the affordable ones. */
+    private void markEveryCardClickable(GameState gameState) {
+        gameState.setCardsOnTable(utils.listToMap(
+                utils.mapToList(gameState.getCardsOnTable())
+                        .stream()
+                        .map(card -> {
+                            if (card.getId() != 91L) {
+                                card.setClickable(true);
+                            }
+                            return card;
+                        })
+                        .collect(Collectors.toList())));
     }
 
     @Override

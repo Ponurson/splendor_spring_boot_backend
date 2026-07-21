@@ -31,6 +31,9 @@ public class GameState {
     @ManyToMany(fetch = FetchType.EAGER)
     private List<Noble> nobles;
     private String lastPlayerName;
+    // set when the current player clicks gold, cleared by upkeep when the turn's action completes;
+    // persisted so a page refresh does not silently drop the player out of reserve mode
+    private boolean reserveTime;
     @OneToMany(fetch = FetchType.EAGER)
     private List<User> userList;
 

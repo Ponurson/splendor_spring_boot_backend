@@ -379,6 +379,13 @@ public class GameServiceImpl implements GameService {
     @Override
     public GameStateWrapper addGoldToken(CurrentUser currentUser) {
         GameState gameState = currentUser.getUser().getGameState();
+        // clicking gold again leaves reserve mode - without it a misclick can only be undone by
+        // reserving something, and with an empty table and empty decks not even that
+        if (gameState.isReserveTime()) {
+            gameState.setReserveTime(false);
+            gameStateRepository.save(gameState);
+            return getFullStateAtInit(currentUser); // rebuilds clickability for the buy-only view
+        }
         Player player = getPlayerFromGameState(currentUser, gameState);
         gameState.setReserveTime(true);
         markEveryCardClickable(gameState);

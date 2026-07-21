@@ -34,6 +34,8 @@ public class GameServiceImpl implements GameService {
         gameState.setUserList(challenged);
         gameState.setPlayers(players);
         List<Card> cardList = cardRepository.findAll();
+        // the level-0 card (id 91) is the "empty slot" placeholder, it must never sit in the deck
+        cardList.removeIf(card -> card.getLevel() == 0);
         ArrayList<Card> cardsOnTable = new ArrayList<>();
         for (int i = 1; i < 4; i++) {
             int finalI = i;
@@ -153,14 +155,10 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public boolean checkTokenGain(String token, CurrentUser currentUser) {
-        GameState gameState = currentUser.getUser().getGameState();
-        String currentPlayer = getNextPlayer(gameState);
-        if (currentUser.getUsername().equals(currentPlayer)) {
-            if (checkTokenWithGetter(token, gameState, 3)) {
-                return true;
-            }
-        }
-        return false;
+        // gold can only be gained by reserving a card, never as a "take two" action
+        return isPlayersTurn(currentUser) &&
+                !TokenType.GOLD.name().equals(token) &&
+                checkTokenWithGetter(token, currentUser.getUser().getGameState(), 3);
     }
 
     @Override
@@ -174,9 +172,12 @@ public class GameServiceImpl implements GameService {
         Set<String> keySet = token.keySet();
         Set<String> set = keySet.stream()
                 .map(s -> (String) token.get(s))
+                .filter(s -> !TokenType.GOLD.name().equals(s))
                 .filter(s -> checkTokenWithGetter(s, gameState, 0))
                 .collect(Collectors.toSet());
-        return set.size() == 3;
+        // token.size() == set.size() rejects duplicated colors and smuggled GOLD entries,
+        // addTokens() grants every entry of the request so each one must have been validated
+        return isPlayersTurn(currentUser) && set.size() == 3 && token.size() == 3;
     }
 
     @Override
@@ -193,7 +194,7 @@ public class GameServiceImpl implements GameService {
         return upkeep(gameState, player);
     }
 
-    private boolean giveNobleToPlayer(Player player, GameState gameState) {
+    private void giveNobleToPlayer(Player player, GameState gameState) {
         Map<TokenType, Integer> cards = player.getMapOfCards();
         List<Noble> nobles = gameState.getNobles();
         List<Noble> availableNobles = nobles.stream()
@@ -201,22 +202,16 @@ public class GameServiceImpl implements GameService {
                         .allMatch(tokenType -> cards.get(tokenType) >=
                                 (noble.getCardCombination().get(tokenType) != null ? noble.getCardCombination().get(tokenType) : 0)))
                 .collect(Collectors.toList());
-        if (availableNobles.size() == 1) {
+        if (!availableNobles.isEmpty()) {
+            // ponytail: rules let the player pick among multiple nobles; no UI for that, grant the first
             Noble noble = availableNobles.get(0);
             nobles.remove(noble);
             player.addNoble(noble);
             gameState.setNobles(nobles);
-            gameState.setLastPlayerName(player.getUser().getUsername());
-            playerRepository.save(player);
-            gameStateRepository.save(gameState);
-            return false;
-        } else if (availableNobles.size() > 1) {
-            return true;
         }
         gameState.setLastPlayerName(player.getUser().getUsername());
         playerRepository.save(player);
         gameStateRepository.save(gameState);
-        return false;
     }
 
     @Override
@@ -240,7 +235,7 @@ public class GameServiceImpl implements GameService {
     public String upkeep(GameState gameState, Player player) {
         int i = howManyTokensNeedToBeGivenBack(player);
         if (i == 0) {
-            boolean isDialogNeeded = giveNobleToPlayer(player, gameState);
+            giveNobleToPlayer(player, gameState);
             if (endGame(gameState)) {
                 gameState.setLastPlayerName("endGame");
                 gameStateRepository.save(gameState);
@@ -256,18 +251,19 @@ public class GameServiceImpl implements GameService {
     @Override
     public boolean checkBuyCard(String cardId, CurrentUser currentUser) {
         GameState gameState = currentUser.getUser().getGameState();
-        String currentPlayer = getNextPlayer(gameState);
-        if (currentUser.getUsername().equals(currentPlayer)) {
+        if (isPlayersTurn(currentUser)) {
+            String currentPlayer = currentUser.getUsername();
             GameState gameState1 = checkPossibleActions(gameState,
                     playerRepository.findFirstByUser(currentUser.getUser()).get());
+            // clickable is null (not false) on unaffordable cards, plain anyMatch would NPE
             return utils.mapToList(gameState1.getCardsOnTable()).stream()
                     .filter(card -> card.getId().equals(Long.parseLong(cardId)))
-                    .anyMatch(Card::getClickable) || gameState1.getPlayers()
+                    .anyMatch(card -> Boolean.TRUE.equals(card.getClickable())) || gameState1.getPlayers()
                     .stream()
                     .filter(player -> currentPlayer.equals(player.getUser().getUsername()))
                     .findFirst().get().getCardsInHand().stream()
                     .filter(card -> card.getId().equals(Long.parseLong(cardId)))
-                    .anyMatch(Card::getClickable);
+                    .anyMatch(card -> Boolean.TRUE.equals(card.getClickable()));
         }
         return false;
     }
@@ -316,11 +312,16 @@ public class GameServiceImpl implements GameService {
         Set<String> keySet = token.keySet();
         Set<String> set = keySet.stream()
                 .map(s -> (String) token.get(s))
+                .filter(s -> !TokenType.GOLD.name().equals(s))
                 .filter(s -> checkTokenWithGetter(s, gameState, 0))
                 .collect(Collectors.toSet());
         int numberOfEmptyTokens = (int) Arrays.stream(TokenType.values())
+                .filter(tokenType -> tokenType != TokenType.GOLD)
                 .filter(tokenType -> gameState.getTokensOnTable().get(tokenType) == 0).count();
-        return set.size() == (5 - numberOfEmptyTokens);
+        // same as checkTokenGain: every sent entry must be a distinct, validated, non-gold color
+        return isPlayersTurn(currentUser) &&
+                set.size() == Math.min(3, 5 - numberOfEmptyTokens) &&
+                token.size() == set.size();
     }
 
     @Override
@@ -333,10 +334,16 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public boolean checkTokensReturn(List<TokenType> tokens, CurrentUser currentUser) {
-        Map<TokenType, Integer> playerTokens = playerRepository.
-                findFirstByUser(currentUser.getUser())
-                .get().getPlayerTokens();
-        return tokens.stream().allMatch(tokenType -> playerTokens.get(tokenType) - 1 >= 0);
+        if (!isPlayersTurnIgnoringTokenLimit(currentUser)) {
+            return false;
+        }
+        Player player = playerRepository.findFirstByUser(currentUser.getUser()).get();
+        Map<TokenType, Integer> playerTokens = player.getPlayerTokens();
+        int debt = howManyTokensNeedToBeGivenBack(player);
+        // returning tokens ends the turn (upkeep), so it is only legal when the player
+        // is over the limit and returns exactly the excess - otherwise it is a free "pass"
+        return debt > 0 && tokens.size() == debt && tokens.stream().distinct()
+                .allMatch(tokenType -> playerTokens.getOrDefault(tokenType, 0) >= Collections.frequency(tokens, tokenType));
     }
 
     @Override
@@ -358,7 +365,8 @@ public class GameServiceImpl implements GameService {
     @Override
     public boolean checkGoldToken(CurrentUser currentUser) {
         GameState gameState = currentUser.getUser().getGameState();
-        return getPlayerFromGameState(currentUser, gameState).getCardsInHand().size() <= 3;
+        return isPlayersTurn(currentUser) &&
+                getPlayerFromGameState(currentUser, gameState).getCardsInHand().size() < 3;
     }
 
     @Override
@@ -370,7 +378,9 @@ public class GameServiceImpl implements GameService {
                         utils.mapToList(gameState.getCardsOnTable())
                                 .stream()
                                 .map(card -> {
-                                    card.setClickable(true);
+                                    if (card.getId() != 91L) {
+                                        card.setClickable(true);
+                                    }
                                     return card;
                                 })
                                 .collect(Collectors.toList())));
@@ -393,7 +403,19 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public boolean checkReserveCard(String cardId, CurrentUser currentUser) {
-        return playerRepository.findFirstByUser(currentUser.getUser()).get().getCardsInHand().size() <= 3;
+        return isPlayersTurn(currentUser) &&
+                playerRepository.findFirstByUser(currentUser.getUser()).get().getCardsInHand().size() < 3;
+    }
+
+    private void giveGoldTokenIfAvailable(GameState gameState, Player player) {
+        Map<TokenType, Integer> playerTokens = player.getPlayerTokens();
+        Map<TokenType, Integer> tokensOnTable = gameState.getTokensOnTable();
+        if (tokensOnTable.get(TokenType.GOLD) > 0) {
+            playerTokens.put(TokenType.GOLD, (playerTokens.get(TokenType.GOLD) == null ? 0 : playerTokens.get(TokenType.GOLD)) + 1);
+            tokensOnTable.put(TokenType.GOLD, tokensOnTable.get(TokenType.GOLD) - 1);
+            player.setPlayerTokens(playerTokens);
+            gameState.setTokensOnTable(tokensOnTable);
+        }
     }
 
     @Override
@@ -402,27 +424,26 @@ public class GameServiceImpl implements GameService {
         GameState gameState = currentUser.getUser().getGameState();
         Player player = getPlayerFromGameState(currentUser, gameState);
 
-        Map<TokenType, Integer> playerTokens = player.getPlayerTokens();
-        Map<TokenType, Integer> tokensOnTable = gameState.getTokensOnTable();
-        if (tokensOnTable.get(TokenType.GOLD) > 0) {
-            playerTokens.put(TokenType.GOLD, (playerTokens.get(TokenType.GOLD) == null ? 0 : playerTokens.get(TokenType.GOLD)) + 1);
-            tokensOnTable.put(TokenType.GOLD, (tokensOnTable.get(TokenType.GOLD) == null ? 0 : tokensOnTable.get(TokenType.GOLD)) - 1);
-            player.setPlayerTokens(playerTokens);
-            gameState.setTokensOnTable(tokensOnTable);
-        }
-
         Card card = cardRepository.findById(Long.parseLong(cardId)).get();
-        player.addCardToHand(card);
         List<Card> cardsOnTable = utils.mapToList(gameState.getCardsOnTable());
         int cardToChange = cardsOnTable.indexOf(card);
+        if (cardToChange == -1 || card.getId() == 91L) {
+            return "bad request";
+        }
+        giveGoldTokenIfAvailable(gameState, player);
+        player.addCardToHand(card);
         List<Card> cardList = gameState.getCards();
         List<Card> cardsFromLevelList = cardList.stream()
                 .filter(c -> Objects.equals(c.getLevel(), card.getLevel()))
                 .collect(Collectors.toList());
-        Card newCard = cardsFromLevelList.get(r.nextInt(cardsFromLevelList.size()));
-        cardList.remove(newCard);
-        gameState.setCards(cardList);
-        cardsOnTable.set(cardToChange, newCard);
+        if (cardsFromLevelList.isEmpty()) {
+            cardsOnTable.set(cardToChange, cardRepository.findById(91L).get());
+        } else {
+            Card newCard = cardsFromLevelList.get(r.nextInt(cardsFromLevelList.size()));
+            cardList.remove(newCard);
+            gameState.setCards(cardList);
+            cardsOnTable.set(cardToChange, newCard);
+        }
         gameState.setCardsOnTable(utils.listToMap(cardsOnTable));
         return upkeep(gameState, player);
     }
@@ -436,6 +457,10 @@ public class GameServiceImpl implements GameService {
         List<Card> cardsFromLevelList = cardList.stream()
                 .filter(c -> Objects.equals(c.getLevel(), Integer.parseInt(deckNr)))
                 .collect(Collectors.toList());
+        if (cardsFromLevelList.isEmpty()) {
+            return "bad request";
+        }
+        giveGoldTokenIfAvailable(gameState, player);
         Card newCard = cardsFromLevelList.get(r.nextInt(cardsFromLevelList.size()));
         cardList.remove(newCard);
         gameState.setCards(cardList);
@@ -469,6 +494,19 @@ public class GameServiceImpl implements GameService {
         }
         user.setUserState("idle");
         userRepository.save(user);
+    }
+
+    private boolean isPlayersTurn(CurrentUser currentUser) {
+        // a player over the 10-token limit may only return tokens (checkTokensReturn),
+        // any other action while the turn has not passed yet must be rejected
+        return isPlayersTurnIgnoringTokenLimit(currentUser) &&
+                howManyTokensNeedToBeGivenBack(
+                        getPlayerFromGameState(currentUser, currentUser.getUser().getGameState())) == 0;
+    }
+
+    private boolean isPlayersTurnIgnoringTokenLimit(CurrentUser currentUser) {
+        GameState gameState = currentUser.getUser().getGameState();
+        return gameState != null && currentUser.getUsername().equals(getNextPlayer(gameState));
     }
 
     private String getNextPlayer(GameState gameState) {
